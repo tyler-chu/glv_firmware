@@ -13,10 +13,13 @@
 #define ALERT_PIN 17
 
 const int SLAVE_ADDRESS = 0x18;
-
-bq769x0 BMS;    // BMS Object 
-
+bq769x0 BMS;                    // BMS Object 
 float temp, current, voltage;   // used for BMS
+hw_timer_t *status_cfg = NULL;
+
+void IRAM_ATTR status_ISR(){
+    BMS.checkStatus();
+}
 
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
 void i2c_setup(){
@@ -41,6 +44,12 @@ void bms_set_protection(){
 void bms_setup(){
     Serial.println("bms_setup(): Running...");
     BMS.begin(ALERT_PIN, 3);   // (alert, boot)
+
+    // config timer for interrupt (5 sec timer)
+    // status_cfg = timerBegin(0, 40, true);
+    // timerAttachInterrupt(status_cfg, &status_ISR, true);
+    // timerAlarmWrite(status_cfg, 5000000, true);
+    // timerAlarmEnable(status_cfg);
     
     // BMS.enableCharging();
     // BMS.enableDischarging();
