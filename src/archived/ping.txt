@@ -1,0 +1,55 @@
+/*********
+  Rui Santos
+  Complete project details at https://randomnerdtutorials.com  
+*********/
+
+#include <Wire.h>
+#include <Arduino.h>
+
+#define I2C_SDA 7
+#define I2C_SCL 9
+#define SLAVE_ADDRESS 0x08
+
+byte test_byte = 0b10000000;
+ 
+void setup() {
+  Wire.begin(I2C_SDA, I2C_SCL);
+  Serial.begin(115200);
+  Serial.println("\nI2C Scanner");
+}
+
+void loop() {
+  byte error, register_data;
+
+  Serial.println("Reading Registers...");
+  Wire.beginTransmission(SLAVE_ADDRESS);
+  Wire.write(0x00);  // specific register - sys_stat register
+  error = Wire.endTransmission();
+  Wire.requestFrom(SLAVE_ADDRESS, 1);
+  register_data = Wire.read();
+  Serial.println(register_data);
+  Serial.println(error);
+  Serial.println("----------------------------------------");
+
+  Serial.println("Clearing Registers...");
+  Wire.beginTransmission(SLAVE_ADDRESS);
+  Wire.write(SLAVE_ADDRESS);
+  Wire.write(0x00); // specific register - sys_stat register
+  Wire.write(test_byte);
+  error = Wire.endTransmission();
+  Serial.println("Writing 1 to Register...");
+  Serial.println();
+  Serial.println("----------------------------------------");
+
+  Serial.println("Reading NEW Register Data...");
+  Wire.beginTransmission(SLAVE_ADDRESS);
+  Wire.write(0x00); // specific register - sys_stat register
+  error = Wire.endTransmission();
+  Wire.requestFrom(SLAVE_ADDRESS, 1);
+  register_data = Wire.read();
+  Serial.println(register_data);
+  Serial.println(error);
+  Serial.println("----------------------------------------");
+
+  delay(5000);      
+}

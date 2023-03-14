@@ -1,0 +1,132 @@
+// /**
+//  * @file main.cpp
+//  * @author Tyler, Joey
+//  * @brief Firmware for Aztec Electric Racing GLV
+//  */
+
+// #include <Wire.h>
+// #include <Arduino.h>
+// #include <LED_Config.h>
+// #include <Logging_Config.h>
+// #include <BMS_Config.h>
+// #include <Boot_Config.h>
+
+// bool boot_flag = false;
+
+// void setup()
+// {
+//   i2c_setup();
+//   Serial.begin(115200);
+//   boot_bms(boot_flag);
+//   // switch_setup();
+// }
+
+// void loop()
+// {
+//   // i2c read/write here
+// }
+
+/**
+ * @file software_boot.txt
+ * @author Tyler, Joey
+ * @brief Uses software to boot up the BMS IC. Uses Pin #3 (any GPIO pin) and sets it to HIGH (will turn on BMS IC).
+ *        No need to use physical boot button anymore. Uses i2c validation to check if successfully turned on
+ *        (if i2c bus = created, BMS = ON, if i2c bus != created, BMS = OFF).
+ */
+
+#include <Wire.h>
+#include <Arduino.h>
+
+#define I2C_SDA 7
+#define I2C_SCL 9
+#define BOOT 3
+
+#define LED_RED 11
+#define LED_GREEN 13
+#define LED_BLUE 15
+
+#define MOMENTARY_SWITCH 1
+
+#define SLAVE_ADDRESS 0x18
+
+bool boot_flag = false;
+
+bool momentary_flag = false;
+
+void LED_LOGGING(){
+  momentary_flag = !momentary_flag;
+
+  // logging == green light
+  if (momentary_flag == true){
+      pinMode(LED_RED, OUTPUT);
+      pinMode(LED_GREEN, OUTPUT);
+      pinMode(LED_BLUE, OUTPUT);
+      analogWrite(LED_RED, 84);
+      analogWrite(LED_GREEN, 252);
+      analogWrite(LED_BLUE, 132);
+  }
+
+  // led == blue light 
+  if (momentary_flag == false){
+      pinMode(LED_RED, OUTPUT);
+      pinMode(LED_GREEN, OUTPUT);
+      pinMode(LED_BLUE, OUTPUT);
+      analogWrite(LED_RED, 0);
+      analogWrite(LED_GREEN, 94);
+      analogWrite(LED_BLUE, 255);
+  }
+
+}
+
+void setup()
+{
+  Wire.begin(I2C_SDA, I2C_SCL);
+  Serial.begin(115200);
+
+  pinMode(MOMENTARY_SWITCH, INPUT);
+  attachInterrupt(digitalPinToInterrupt(MOMENTARY_SWITCH), LED_LOGGING, RISING);
+
+}
+
+void loop()
+{
+  // Boot up BMS w/ Software
+  while (!boot_flag) {
+    delay(1000);
+    pinMode(BOOT, OUTPUT);
+    // Serial.begin(115200);
+    Serial.println("Booting Up from Setup...");
+    delay(1000);
+
+    digitalWrite(BOOT, HIGH);  // switch diode on
+    Serial.println("LED turned on...");
+    delay(3); // 3 ms = 3000 us 
+    digitalWrite(BOOT, LOW);
+
+    Wire.beginTransmission(SLAVE_ADDRESS);
+    byte error = Wire.endTransmission();
+
+    if (error == 0) {
+      Serial.println("BMS IC has successfully booted up.");
+
+      // TODO: LED = ON if booted correctly
+      // led_boot();
+      pinMode(LED_RED, OUTPUT);
+      pinMode(LED_GREEN, OUTPUT);
+      pinMode(LED_BLUE, OUTPUT);
+      analogWrite(LED_RED, 0);
+      analogWrite(LED_GREEN, 94);
+      analogWrite(LED_BLUE, 255);
+      boot_flag = true;
+    }
+
+    else
+      Serial.println("BMS IC: OFF.\n");
+
+    delay(2000);
+
+  }
+
+  
+  
+}

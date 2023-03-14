@@ -1,0 +1,36 @@
+const byte data[] = { 0xC0, 0xC0, 0x00, 0xFF, 0xCF };
+void setup() {
+
+  Serial.begin(9600);
+  Serial.println("Ready");
+  byte crc = Compute_CRC8(data, sizeof(data));
+  Serial.print("CRC =");
+  Serial.println(crc, HEX);
+
+}
+
+void loop() {
+}
+
+byte Compute_CRC8(byte *bytes, int len) {
+  const byte generator = B00101111;   // polynomial = x^8 + x^5 + x^3 + x^2 + x + 1 (ignore MSB which is always 1)
+  byte crc = 0;
+
+  while (len--)
+  {
+    crc ^= *bytes++; /* XOR-in the next input byte */
+
+    for (int i = 0; i < 8; i++)
+    {
+      if ((crc & 0x80) != 0)
+      {
+        crc = (byte)((crc << 1) ^ generator);
+      }
+      else
+      {
+        crc <<= 1;
+      }
+    }
+  }
+  return crc;
+}
