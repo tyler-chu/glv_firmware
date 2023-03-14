@@ -13,14 +13,14 @@ bool boot_flag = false;
 hw_timer_t *boot_cfg = NULL;
 
 // Timer0_ISR called every 3 ms for booting up BM IC (only one time)
-void IRAM_ATTR Boot_ISR(){
+void IRAM_ATTR boot_ISR(){
     digitalWrite(BOOT, LOW);
 }
 
 void boot_setup(){
     // 40 MHz crystal oscillator - internal system clock
     boot_cfg = timerBegin(0, 40, true);
-    timerAttachInterrupt(boot_cfg, &Boot_ISR, true);
+    timerAttachInterrupt(boot_cfg, &boot_ISR, true);
     timerAlarmWrite(boot_cfg, 3000, true);
     timerAlarmEnable(boot_cfg);
 }
