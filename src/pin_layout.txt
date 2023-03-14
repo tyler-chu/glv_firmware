@@ -1,0 +1,26 @@
+BMS_Config:
+    I2C_SDA         7
+    I2C_SCL         9
+    ALERT_PIN       17
+
+Boot_Config:
+    BOOT            3
+
+LCD_Config:
+    RES             21      // reset signal           
+    CS              33      // chip select signal              
+    RS              19      // register select signal (A0)    
+    SC              35      // serial clock signal            
+    SI              37      // serial data signal  
+
+LED_Config: 
+    LED_RED         11
+    LED_GREEN       13
+    LED_BLUE        15
+    MOMENTARY_SWITCH 1
+
+SD_Config:
+    SCK             36      // (CLK)
+    MISO            42      // (DO)
+    MOSI            40      // (DI)
+    SPI_CS          38      // (CS)
