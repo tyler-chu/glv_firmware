@@ -15,18 +15,18 @@
 void setup()
 {
   Serial.begin(115200);
-  delay(3000);
+  // delay(3000);
   i2c_setup();
-  led_setup();
+  // led_setup();
   boot_bms();
-  switch_setup();
-  bms_setup();
-  spi_setup();
-  lcd_setup();
+  // switch_setup();
+  // bms_setup();
+  // spi_setup();
+  // lcd_setup();
 }
 
 void loop()
 {
-  led_logging();
+  // led_logging();
 }
 

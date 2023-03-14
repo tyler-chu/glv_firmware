@@ -10,20 +10,36 @@
 
 // used to determine if BM IC = ON
 bool boot_flag = false;
+hw_timer_t *boot_cfg = NULL;
+
+// Timer0_ISR called every 3 ms for booting up BM IC (only one time)
+void IRAM_ATTR boot_ISR(){
+    digitalWrite(BOOT, LOW);
+}
+
+void boot_setup(){
+    // 40 MHz crystal oscillator - internal system clock
+    boot_cfg = timerBegin(0, 40, true);
+    timerAttachInterrupt(boot_cfg, &boot_ISR, true);
+    timerAlarmWrite(boot_cfg, 3000, true);
+    timerAlarmEnable(boot_cfg);
+}
 
 // boot_bms: powers on the BM IC using firmware instead of physical push button
 void boot_bms(){
     Serial.println("boot_bms(): Running...");
 
+    boot_setup();
+
     while (!boot_flag) {
-        delay(1000);
+        // delay(1000);
         pinMode(BOOT, OUTPUT);
-        delay(1000);
+        // delay(1000);
 
         // attempt to turn on BM IC using BOOT PIN (3)
         digitalWrite(BOOT, HIGH);  // switch diode on
-        delay(3); // 3 ms = 3000 us 
-        digitalWrite(BOOT, LOW);
+        // delay(3); // 3 ms = 3000 us 
+        // digitalWrite(BOOT, LOW);
 
         // attempt to transmit over I2C communication link (BM IC & ESP-32)
         Wire.beginTransmission(SLAVE_ADDRESS);
