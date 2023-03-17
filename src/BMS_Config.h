@@ -12,14 +12,15 @@
 #define I2C_SCL 9
 #define ALERT_PIN 17
 
-const int SLAVE_ADDRESS = 0x18;
-bq769x0 BMS;                    // BMS Object 
-float temp, current, voltage;   // used for BMS
+// const int SLAVE_ADDRESS = 0x18;  // model 7: ic
+const int SLAVE_ADDRESS = 0x08;     // model 3: ic
+bq769x0 BMS;                        // BMS Object 
+float temp, current, voltage;       // used for BMS
 hw_timer_t *status_cfg = NULL;
 
-void IRAM_ATTR status_ISR(){
-    BMS.checkStatus();
-}
+// void IRAM_ATTR status_ISR(){
+//     BMS.checkStatus();
+// }
 
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
 void i2c_setup(){
@@ -28,6 +29,56 @@ void i2c_setup(){
     delay(1000);
     Serial.println("i2c_setup(): Running...");
 }
+
+// i2c_scanner: scan for slave address 
+void i2c_scanner(){
+
+    bool address_flag = false;
+
+    while (!address_flag){
+        byte error, address;
+        int nDevices;
+        Serial.println("Scanning...");
+        nDevices = 0;
+
+        // scans through 128 different addresses to locate the address of the slave (in HEX)
+        for(address = 1; address < 127; address++ ) {
+            Wire.beginTransmission(address);
+            error = Wire.endTransmission();
+            
+            // error = 0: success
+            if (error == 0) {
+            Serial.print("I2C device found at address 0x");
+            if (address<16) {
+                Serial.print("0");
+            }
+            Serial.println(address,HEX);
+            nDevices++;
+
+            address_flag = true;
+            }
+
+            // error = 4: other error 
+            else if (error == 4) {
+            Serial.print("Unknown error at address 0x");
+            if (address<16) {
+                Serial.print("0");
+            }
+            Serial.println(address,HEX);
+            }    
+        }
+
+        if (nDevices == 0) {
+            Serial.println("No I2C devices found\n");
+        }
+        else {
+            Serial.println("done\n");
+        }
+        delay(5000);          
+    }
+
+}
+
 
 // bms_set_protection: sets up thresholds for protection
 void bms_set_protection(){
@@ -80,6 +131,7 @@ void clear_sys_stat(){
     Serial.println(")\t <-- SYS_STAT Register");
 
     Serial.println("-----------------------");
+
 }
 
 /**
@@ -121,7 +173,7 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
-    // BMS.setThermistorBetaValue(1);
+    BMS.setThermistorBetaValue(3977);
     BMS.updateTemperatures();
     BMS.updateCurrent();
     BMS.updateVoltages();
@@ -130,16 +182,16 @@ void get_bms_values(){
     current = BMS.getBatteryCurrent();
     voltage = BMS.getBatteryVoltage();
 
-    // Serial.print("Temp: ");
-    // Serial.println(temp);
+    Serial.print("Temp: ");
+    Serial.println(temp);
 
-    // Serial.print("I_o: ");
-    // Serial.println(current);
+    Serial.print("I_o: ");
+    Serial.println(current);
 
-    // Serial.print("V_bat: ");
-    // Serial.println(voltage);
+    Serial.print("V_bat: ");
+    Serial.println(voltage);
 
-    // Serial.println("-----------------------");
+    Serial.println("-----------------------");
 
     delay(1000);
 

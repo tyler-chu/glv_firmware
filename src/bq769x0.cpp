@@ -163,7 +163,8 @@ bool bq769x0::determineAddressAndCrc(void)
   // writeRegister(CC_CFG, 0x19);
   // if (readRegister(CC_CFG) == 0x19) return true;
 
-  I2CAddress = 0x18;
+  // I2CAddress = 0x18; // model 7: bm ic
+  I2CAddress = 0x08;  // model 3: bm ic
   crcEnabled = true;
   writeRegister(CC_CFG, 0x19);
   LOG_PRINTLN("- For optimal performance, these bits should be programmed to 0x19 upon device startup.");
