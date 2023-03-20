@@ -78,6 +78,10 @@
 #define ADCOFFSET       0x51
 #define ADCGAIN2        0x59
 
+// for reading TS1 and TS2 temperatures
+#define TS1_CHANNEL     1
+#define TS2_CHANNEL     2
+
 // function from TI reference design
 #define LOW_BYTE(Data)			(uint8_t)(0xff & Data)
 #define HIGH_BYTE(Data)			(uint8_t)(0xff & (Data >> 8))
@@ -90,7 +94,7 @@
 #define STAT_OV                 (0x04)
 #define STAT_SCD                (0x02)
 #define STAT_OCD                (0x01)
-#define STAT_FLAGS              (0x3F)
+#define STAT_FLAGS              (0x3F)   
 
 // maps for settings in protection registers
 

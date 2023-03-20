@@ -15,7 +15,7 @@
 // const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
 const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
-float temp_ts1, temp_ts2, current, voltage;         // used for BMS
+float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
 // void IRAM_ATTR status_ISR(){
@@ -175,16 +175,20 @@ void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
     BMS.updateTemperatures();
+    temp_ts1 = BMS.getTemperatureDegC(TS1_CHANNEL);
+    BMS.updateTemperatures2();
+    temp_ts2 = BMS.getTemperatureDegC(TS2_CHANNEL);
     // BMS.updateCurrent();
     // BMS.updateVoltages();
-    
-    temp_ts1 = BMS.getTemperatureDegC();
-    temp_ts2 = BMS.getTemperatureDegC();
+
     current = BMS.getBatteryCurrent();
     voltage = (BMS.getBatteryVoltage())/1000;
 
-    Serial.print("Temp: ");
-    Serial.println(temp);
+    Serial.print("Temp TS1: ");
+    Serial.println(temp_ts1);
+
+    Serial.print("Temp TS2: ");
+    Serial.println(temp_ts2);
 
     Serial.print("I_o: ");
     Serial.println(current);

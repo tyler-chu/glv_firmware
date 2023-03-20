@@ -691,7 +691,7 @@ void bq769x0::updateTemperatures()
 
   // internal air temperature (TS1)
   Wire.beginTransmission(I2CAddress);
-  Wire.write(0x2C);
+  Wire.write(TS1_HI_BYTE);
   Wire.endTransmission();
   
   if (Wire.requestFrom(I2CAddress, 2) == 2)
@@ -706,6 +706,7 @@ void bq769x0::updateTemperatures()
     // - 25°C reference temperature for Beta equation assumed
     tmp = 1.0/(1.0/(273.15+25) + 1.0/thermistorBetaValue*log(rts/10000.0)); // K
     
+    // update channel 1 temp (TS1)
     temperatures[0] = (tmp - 273.15) * 10.0;
   }
 
@@ -714,7 +715,39 @@ void bq769x0::updateTemperatures()
 // internal chip temperature (TS2)
 // TODO: implement 
 void bq769x0::updateTemperatures2()
-{}
+{
+  float tmp = 0;
+  int adcVal = 0;
+  int vtsx = 0;
+  unsigned long rts = 0;
+
+  // clear TEMP_SEL bit
+  //writeRegister(SYS_CTRL1, B0001000);
+  
+  // internal die temperature (TS2)
+  Wire.beginTransmission(I2CAddress);
+  Wire.write(TS2_HI_BYTE);
+  Wire.endTransmission();
+  
+  if (Wire.requestFrom(I2CAddress, 2) == 2)
+  {
+    // calculate R_thermistor according to bq769x0 datasheet
+    adcVal = ((Wire.read() & B00111111) << 8) | Wire.read();
+    vtsx = adcVal * 0.382; // mV
+    rts = 10000.0 * vtsx / (3300.0 - vtsx); // Ohm
+        
+    // Temperature calculation using Beta equation
+    // - According to bq769x0 datasheet, only 10k thermistors should be used
+    // - 25°C reference temperature for Beta equation assumed
+    tmp = 1.0/(1.0/(273.15+25) + 1.0/thermistorBetaValue*log(rts/10000.0)); // K
+    
+    // update channel 2 temp (TS2)
+    temperatures[1] = (tmp - 273.15) * 10.0;
+  }
+
+  // set TEMP_SEL bit
+  //writeRegister(SYS_CTRL1, B0001000);
+}
 
 
 
