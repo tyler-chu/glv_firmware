@@ -50,6 +50,7 @@ class bq769x0 {
 	void updateVoltages(void);
 	void updateCurrent(bool ignoreCCReadyFlag = false);
 	void updateTemperatures(void);
+    void updateTemperatures2(void);
     byte updateBalancingSwitches(void);
   
     // initialization, status update and shutdown

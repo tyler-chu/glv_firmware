@@ -688,6 +688,8 @@ void bq769x0::updateTemperatures()
   int vtsx = 0;
   unsigned long rts = 0;
   
+
+  // internal air temperature (TS1)
   Wire.beginTransmission(I2CAddress);
   Wire.write(0x2C);
   Wire.endTransmission();
@@ -706,7 +708,15 @@ void bq769x0::updateTemperatures()
     
     temperatures[0] = (tmp - 273.15) * 10.0;
   }
+
 }
+
+// internal chip temperature (TS2)
+// TODO: implement 
+void bq769x0::updateTemperatures2()
+{}
+
+
 
 
 //----------------------------------------------------------------------------
@@ -719,8 +729,11 @@ void bq769x0::updateCurrent(bool ignoreCCReadyFlag)
   int16_t adcVal = 0;
   regSYS_STAT_t sys_stat;
   sys_stat.regByte = readRegister(SYS_STAT);
+
+  bool ignore_cc = true;
   
-  if (ignoreCCReadyFlag == true || sys_stat.bits.CC_READY == 1)
+  // if (ignoreCCReadyFlag == true || sys_stat.bits.CC_READY == 1)
+  if (ignore_cc)
   {
     adcVal = (readRegister(0x32) << 8) | readRegister(0x33);
     batCurrent = adcVal * 8.44 / shuntResistorValue_mOhm;  // mA
