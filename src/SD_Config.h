@@ -138,7 +138,7 @@ void set_log_start(){
 }
 
 // spi_write: write data to a .csv file, save file to micro-sd card
-void spi_write(float temp, float current, float voltage){
+void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
 
   char buffer[50];
 
@@ -164,14 +164,14 @@ void spi_write(float temp, float current, float voltage){
   else
     sprintf(formatted_seconds, "%d", seconds);
   
-  sprintf(buffer, "%s:%s,%f,%f,%f,0\n", formatted_minutes, formatted_seconds, temp, current, voltage);
+  sprintf(buffer, "%s:%s,%f,%f,%f,%f,0\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage);
 
   // 1st iteration, creates .csv file w/ column headers
   if (counter == 0){
     Serial.println("spi_write(): Running");
     file_counter += 1;  // used for dynamic naming of log files 
     sprintf(name_buffer, "/log%d.csv", file_counter);
-    writeFile(SD, name_buffer, "Time(min:sec), Temp,I_o,V_bat,Bat%\n");
+    writeFile(SD, name_buffer, "Time(min:sec), TS1, TS2, I_o,V_bat,Bat%\n");
     counter += 1;
   }
   
