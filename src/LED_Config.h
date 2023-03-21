@@ -69,7 +69,7 @@ void led_logging(){
 
         // get starting log time 
         set_log_start();
-        spi_write(temp, current, voltage);
+        spi_write(temp_ts1, temp_ts2, current, voltage);
 
         // used to indicate 1st iteration of a state (terminal output preferences)
         disp_counter += 1;
@@ -85,7 +85,7 @@ void led_logging(){
 
         // write to .csv file, send to micro-sd card
         delay(1000);
-        spi_write(temp, current, voltage);
+        spi_write(temp_ts1, temp_ts2, current, voltage);
     }
 
     // momentary switch (LOW) --> idle state
