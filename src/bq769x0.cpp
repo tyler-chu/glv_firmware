@@ -81,6 +81,9 @@ bq769x0::bq769x0(byte bqType, int bqI2CAddress)
   else {
     numberOfCells = 15;
   }
+
+  if (type == bq76930)
+    numberOfCells = 6;
   
   // prevent errors if someone reduced MAX_NUMBER_OF_CELLS accidentally
   if (numberOfCells > MAX_NUMBER_OF_CELLS) {
@@ -180,6 +183,9 @@ bool bq769x0::determineAddressAndCrc(void)
 
 int bq769x0::checkStatus()
 {
+   byte sys_ctrl2;
+   sys_ctrl2 = readRegister(SYS_CTRL2);
+
    LOG_PRINT("checkStatus: ");
    LOG_PRINTLN(errorStatus);
   if (alertInterruptFlag == false && errorStatus == 0) {
@@ -188,6 +194,9 @@ int bq769x0::checkStatus()
   else {
     regSYS_STAT_t sys_stat;
     sys_stat.regByte = readRegister(SYS_STAT);
+
+    // there is a fault
+    FAULT_FLAG = true;
 
     if (sys_stat.bits.CC_READY == 1) {
       //LOG_PRINTLN("Interrupt: CC ready");
@@ -217,11 +226,8 @@ int bq769x0::checkStatus()
           if (secSinceErrorCounter % 10 == 0) {
             // led_fault();
             // stop balancing equations
-            // keep FETS open
 
-
-
-
+            // (CHG, DSG FETs are disconnect automatically)
             LOG_PRINTLN(F("Clearing Alert error"));
             writeRegister(SYS_STAT, B00010000);
           }
@@ -232,13 +238,9 @@ int bq769x0::checkStatus()
           if (secSinceErrorCounter % 3 == 0) {
             // led_fault();
 
-
-
-
-
-
             LOG_PRINTLN(F("Clearing XR error"));
             writeRegister(SYS_STAT, B00100000);
+
           }
         }
 
@@ -256,16 +258,17 @@ int bq769x0::checkStatus()
         }
 
         if (sys_stat.regByte & B00000100) { // OV error
-          updateVoltages();
-          if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
-            // led_fault();
-
-
-
-
-            LOG_PRINTLN(F("Clearing OV error"));
-            writeRegister(SYS_STAT, B00000100);
+          while (FAULT_FLAG){
+            updateVoltages();
+            if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
+              // led_fault();
+              FAULT_FLAG = false;
+            }
           }
+
+          LOG_PRINTLN(F("Clearing OV error"));
+          writeRegister(SYS_STAT, B00000100); // clears fault
+          writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
         }
 
         if (sys_stat.regByte & B00000010) { // SCD
@@ -280,6 +283,8 @@ int bq769x0::checkStatus()
           }
         }
 
+
+        // not mandatory
         if (sys_stat.regByte & B00000001) { // OCD
           if (secSinceErrorCounter % 60 == 0) {
             // led_fault();
@@ -341,10 +346,43 @@ bool bq769x0::enableCharging()
     sys_ctrl2 = readRegister(SYS_CTRL2);
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000001);  // switch CHG on
     LOG_PRINTLN("enableCharging: enabled");
+
+    Serial.print("cellVoltages[idCellMaxVoltage]: ");
+    Serial.println(cellVoltages[idCellMaxVoltage]);
+
+    Serial.print("maxCellVoltage: ");
+    Serial.println(maxCellVoltage);
+
+    Serial.print("temperature[0]: ");
+    Serial.println(temperatures[0]);
+
+    Serial.print("maxCellTempCharge: ");
+    Serial.println(maxCellTempCharge);
+
+    Serial.print("minCellTempCharge: ");
+    Serial.println(minCellTempCharge);
+
     return true;
   }
   else {
     LOG_PRINTLN("enableCharging: failed");
+    
+    Serial.print("cellVoltages[idCellMaxVoltage]: ");
+    Serial.println(cellVoltages[idCellMaxVoltage]);
+
+    Serial.print("maxCellVoltage: ");
+    Serial.println(maxCellVoltage);
+
+    Serial.print("temperature[0]: ");
+    Serial.println(temperatures[0]);
+
+    Serial.print("maxCellTempCharge: ");
+    Serial.println(maxCellTempCharge);
+
+    Serial.print("minCellTempCharge: ");
+    Serial.println(minCellTempCharge);
+
+
     return false;
   }
 }
@@ -367,6 +405,23 @@ bool bq769x0::enableDischarging()
   }
   else {
     LOG_PRINTLN("enableDischarging: failed");
+
+    Serial.print("cellVoltages[idCellMinVoltage]: ");
+    Serial.println(cellVoltages[idCellMinVoltage]);
+
+    Serial.print("minCellVoltage: ");
+    Serial.println(minCellVoltage);
+
+    Serial.print("temperature[0]: ");
+    Serial.println(temperatures[0]);
+
+    Serial.print("maxCellTempDisCharge: ");
+    Serial.println(maxCellTempDischarge);
+
+    Serial.print("minCellTempDischarge: ");
+    Serial.println(minCellTempDischarge);
+
+
     return false;
   }
 }
@@ -392,11 +447,16 @@ void bq769x0::setBalancingThresholds(int idleTime_min, int absVoltage_mV, byte v
 // sets balancing registers if balancing is allowed 
 // (sufficient idle time + voltage)
 
-byte bq769x0::updateBalancingSwitches(void)
+
+// TODO: look @ datasheet for bit # 6
+void bq769x0::updateBalancingSwitches(void)
 {
   LOG_PRINTLN("updateBalancingSwitches");
   long idleSeconds = (millis() - idleTimestamp) / 1000;
   byte numberOfSections = numberOfCells/5;
+
+  // Serial.print("Number of Sections: ");
+  // Serial.println(numberOfSections);
   
   // check for millis() overflow
   if (idleSeconds < 0) {
@@ -417,7 +477,8 @@ byte bq769x0::updateBalancingSwitches(void)
     byte balancingFlags;
     byte balancingFlagsTarget;
     
-    for (int section = 0; section < numberOfSections; section++)
+    // for (int section = 0; section < numberOfSections; section++)
+    for (int section = 0; section < 1; section++)
     {
       balancingFlags = 0;
       for (int i = 0; i < 5; i++)
@@ -437,9 +498,9 @@ byte bq769x0::updateBalancingSwitches(void)
           }          
         }
       }
-      LOG_PRINT("Setting CELLBAL");
-      LOG_PRINT(section+1);
-      LOG_PRINT(" register to: ");
+      // LOG_PRINT("Setting CELLBAL");
+      // LOG_PRINT(section+1);
+      // LOG_PRINT(" register to: ");
       LOG_PRINTLN(byte2char(balancingFlags));
       
       // set balancing register for this section
@@ -458,6 +519,7 @@ byte bq769x0::updateBalancingSwitches(void)
     
     balancingActive = false;
   }
+
 }
 
 void bq769x0::setShuntResistorValue(int res_mOhm)

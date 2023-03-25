@@ -29,6 +29,9 @@
 #define bq76930 2
 #define bq76940 3
 
+#define CHG_FET 12 
+#define DSG_FET 14
+
 // output information to serial console for debugging
 // #define BQ769X0_DEBUG 1
 #ifdef BQ769X0_DEBUG
@@ -51,7 +54,8 @@ class bq769x0 {
 	void updateCurrent(bool ignoreCCReadyFlag = false);
 	void updateTemperatures(void);
     void updateTemperatures2(void);
-    byte updateBalancingSwitches(void);
+    void updateBalancingSwitches(void);
+    // byte updateBalancingSwitches(void);
   
     // initialization, status update and shutdown
     bq769x0(byte bqType = bq76920, int bqI2CAddress = 0x18);

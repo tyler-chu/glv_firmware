@@ -2,6 +2,8 @@ BMS_Config:
     I2C_SDA         7
     I2C_SCL         9
     ALERT_PIN       17
+    CHG_FET         12
+    DSG_FET         14
 
 Boot_Config:
     BOOT            3
