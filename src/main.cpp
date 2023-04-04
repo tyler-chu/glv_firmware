@@ -20,16 +20,16 @@ void setup()
   // i2c_scanner();
   // led_setup();
   boot_bms();
-  // switch_setup();
+  switch_setup();
   bms_setup();
   clear_sys_stat();
-  // spi_setup();
+  spi_setup();
   // lcd_setup();
 }
 
 void loop()
 {
-  get_bms_values();
-  // led_logging();
+  // get_bms_values();
+  led_logging();
 }
 

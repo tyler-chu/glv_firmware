@@ -12,8 +12,8 @@
 #define I2C_SCL 9
 #define ALERT_PIN 17
 
-// const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
-const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
+const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
+// const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
 float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
@@ -179,24 +179,24 @@ void get_bms_values(){
     BMS.updateTemperatures2();
     temp_ts2 = BMS.getTemperatureDegC(TS2_CHANNEL);
     // BMS.updateCurrent();
-    // BMS.updateVoltages();
+    BMS.updateVoltages();
 
     current = BMS.getBatteryCurrent();
     voltage = (BMS.getBatteryVoltage())/1000;
 
-    Serial.print("Temp TS1: ");
-    Serial.println(temp_ts1);
+    // Serial.print("Temp TS1: ");
+    // Serial.println(temp_ts1);
 
-    Serial.print("Temp TS2: ");
-    Serial.println(temp_ts2);
+    // Serial.print("Temp TS2: ");
+    // Serial.println(temp_ts2);
 
-    Serial.print("I_o: ");
-    Serial.println(current);
+    // Serial.print("I_o: ");
+    // Serial.println(current);
 
-    Serial.print("V_bat: ");
-    Serial.println(voltage);
+    // Serial.print("V_bat: ");
+    // Serial.println(voltage);
 
-    Serial.println("-----------------------");
+    // Serial.println("-----------------------");
 
     delay(1000);
 
