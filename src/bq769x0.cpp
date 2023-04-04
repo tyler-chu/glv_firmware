@@ -590,6 +590,7 @@ long bq769x0::setShortCircuitProtection(long current_mA, int delay_us)
 long bq769x0::setOvercurrentChargeProtection(long current_mA, int delay_ms)
 {
   // ToDo: Software protection for charge overcurrent
+  return 0;
 }
 
 //----------------------------------------------------------------------------

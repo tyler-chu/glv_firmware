@@ -97,8 +97,16 @@ void bms_set_protection(){
     BMS.setCellUndervoltageProtection(2600, 2);
     BMS.setCellOvervoltageProtection(3650, 2);
 
-    BMS.setBalancingThresholds(0, 3300, 20);
+    BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
+
+    // TODO:
+    // max voltage: 4V / per cell = 24 V (max pack voltage)
+    // under voltage: 2.7 * 6 = 16.2 V (min pack voltage)
+    // short circuit (20 A)
+    // temp (TS1: 60C, come up w/ ambient temp)
+
+
 }
 
 // bms_setup: configures BMS for data reading/protection
