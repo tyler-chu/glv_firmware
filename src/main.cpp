@@ -23,13 +23,13 @@ void setup()
   switch_setup();
   bms_setup();
   clear_sys_stat();
-  spi_setup();
+  // spi_setup();
   // lcd_setup();
 }
 
 void loop()
 {
-  // get_bms_values();
+  get_bms_values();
   led_logging();
 }
 
