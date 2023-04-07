@@ -203,6 +203,8 @@ void get_bms_values(){
 
     delay(1000);
 
+    BMS.checkStatus();
+
 }
 
 // bms_loop(): recieves bms values, displays data, checks status of BM IC
