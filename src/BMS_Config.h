@@ -184,26 +184,26 @@ void get_bms_values(){
     current = BMS.getBatteryCurrent();
     voltage = (BMS.getBatteryVoltage())/1000;
 
-    Serial.print("Temp TS1 [Ext/Ambient]: ");
-    Serial.println(temp_ts1);
+    // Serial.print("Temp TS1 [Ext/Ambient]: ");
+    // Serial.println(temp_ts1);
 
-    Serial.print("Temp TS2 [Int/Die]: \t");
-    Serial.println(temp_ts2);
+    // Serial.print("Temp TS2 [Int/Die]: \t");
+    // Serial.println(temp_ts2);
 
-    // Serial.print("I_o: ");
-    // Serial.println(current);
+    // // Serial.print("I_o: ");
+    // // Serial.println(current);
 
-    // Serial.println("I_o: 2.53");
-    // Serial.println(current);
+    // // Serial.println("I_o: 2.53");
+    // // Serial.println(current);
 
-    Serial.print("V_bat [Pack Voltage]: \t");
-    Serial.println(voltage);
+    // Serial.print("V_bat [Pack Voltage]: \t");
+    // Serial.println(voltage);
 
-    Serial.println("-----------------------------");
+    // Serial.println("-----------------------------");
 
     delay(1000);
 
-    BMS.checkStatus();
+    // BMS.checkStatus();
 
 }
 
