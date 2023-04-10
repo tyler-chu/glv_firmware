@@ -167,8 +167,8 @@ bool bq769x0::determineAddressAndCrc(void)
   // writeRegister(CC_CFG, 0x19);
   // if (readRegister(CC_CFG) == 0x19) return true;
 
-  // I2CAddress = 0x18; // model 7: bm ic
-  I2CAddress = 0x08;  // model 3: bm ic
+  I2CAddress = 0x18; // model 7: bm ic
+  // I2CAddress = 0x08;  // model 3: bm ic
   crcEnabled = true;
   writeRegister(CC_CFG, 0x19);
   LOG_PRINTLN("- For optimal performance, these bits should be programmed to 0x19 upon device startup.");
@@ -178,14 +178,66 @@ bool bq769x0::determineAddressAndCrc(void)
   return false;
 }
 
-
-void bq769x0::xready_handling(uint8_t reg_byte){
-  if (sys_stat.regBbye & B0010000) {
-    
-  }
+// xready_handling(): xr error 
+void bq769x0::xready_handling(){
+  // led_fault(): turn led red
+  LOG_PRINTLN(F("Clearing XR Error ..."));
+  writeRegister(SYS_STAT, B00100000);
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// joey
 
 
 //----------------------------------------------------------------------------
@@ -194,45 +246,27 @@ void bq769x0::xready_handling(uint8_t reg_byte){
 
 int bq769x0::checkStatus()
 {
+  delay(2000);
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
   // fault = NONE
-  if (alertInterruptFlag == false && errorStatus == 0)
+  if (alertInterruptFlag == false && errorStatus == 0){
+    Serial.println("No Error Detected...");
     return 0;
+  }
   
   // fault = detected
   else {
     regSYS_STAT_t sys_stat;
     sys_stat.regByte = readRegister(SYS_STAT);
 
-    // fault definitions
-    int DEVICE_XREADY = 0;
-    int OVRD_ALERT = 0;
-    int UV = 0;
-    int OV = 0;
-    int SCD = 0;
-    int OCD = 0;
-
-    // TODO: diagnose which errors are present
-
     // UI: shows user which faults are present (all 0 if none)
     LOG_PRINTLN("-----------------------");
     LOG_PRINTLN("checkStatus(): Running...");
-    LOG_PRINT("- XR: \t");
-    LOG_PRINTLN(DEVICE_XREADY);
-    LOG_PRINT("- UV: \t ");
-    LOG_PRINTLN(UV);
-    LOG_PRINT("- OV: \t ");
-    LOG_PRINTLN(OV);
-    LOG_PRINT("- SCD: \t ");
-    LOG_PRINTLN(SCD);
-    LOG_PRINT("- OCD: \t ");
-    LOG_PRINTLN(OCD);
-    LOG_PRINTLN("-----------------------");
 
     // prevents interrupts until fault is fixed 
-    FAULT_FLAG = true;
+    // FAULT_FLAG = true;
 
     if (sys_stat.bits.CC_READY == 1) {
       //LOG_PRINTLN("Interrupt: CC ready");
@@ -271,12 +305,10 @@ int bq769x0::checkStatus()
 
         if (sys_stat.regByte & B00100000) { // XR error
           // datasheet recommendation: try to clear after waiting a few seconds
-          if (secSinceErrorCounter % 3 == 0) {
-            // led_fault();
-
-            LOG_PRINTLN(F("Clearing XR Error ..."));
-            writeRegister(SYS_STAT, B00100000);
-
+          if (secSinceErrorCounter % 3 == 0){
+            xready_handling();
+            Serial.print("SYS_STAT: ");
+            Serial.println(sys_stat.regByte);
           }
         }
 
@@ -298,7 +330,7 @@ int bq769x0::checkStatus()
             updateVoltages();
             if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
               // led_fault();
-              FAULT_FLAG = false;
+              // FAULT_FLAG = false;
             }
           }
 
@@ -339,6 +371,8 @@ int bq769x0::checkStatus()
     else {
       errorStatus = 0;
     }
+
+    // FAULT_FLAG = false;
     
     return errorStatus;
 
@@ -487,7 +521,7 @@ void bq769x0::setBalancingThresholds(int idleTime_min, int absVoltage_mV, byte v
 // TODO: look @ datasheet for bit # 6
 void bq769x0::updateBalancingSwitches(void)
 {
-  LOG_PRINTLN("updateBalancingSwitches");
+  // LOG_PRINTLN("updateBalancingSwitches");
   long idleSeconds = (millis() - idleTimestamp) / 1000;
   byte numberOfSections = numberOfCells/5;
 

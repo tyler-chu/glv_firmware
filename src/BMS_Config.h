@@ -12,8 +12,8 @@
 #define I2C_SCL 9
 #define ALERT_PIN 17
 
-// const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
-const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
+const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
+// const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
 float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
@@ -93,7 +93,7 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-20, 45, 0, 45);
     BMS.setShuntResistorValue(5);
     BMS.setShortCircuitProtection(14000, 200);
-    // BMS.setOvercurrentChargeProtection(8000, 200);
+    BMS.setOvercurrentChargeProtection(8000, 200);
     BMS.setOvercurrentDischargeProtection(8000, 320);
     BMS.setCellUndervoltageProtection(2600, 2);
     BMS.setCellOvervoltageProtection(3650, 2);
@@ -116,15 +116,15 @@ void bms_setup(){
     BMS.begin(ALERT_PIN, 3);   // (alert, boot)
 
     // config timer for interrupt (5 sec timer)
-    status_cfg = timerBegin(0, 40, true);
-    timerAttachInterrupt(status_cfg, &status_ISR, true);
-    timerAlarmWrite(status_cfg, 5000000, true);
-    timerAlarmEnable(status_cfg);
+    // status_cfg = timerBegin(0, 40, true);
+    // timerAttachInterrupt(status_cfg, &status_ISR, true);
+    // timerAlarmWrite(status_cfg, 5000000, true);
+    // timerAlarmEnable(status_cfg);
     
-    bms_set_protection();
-    BMS.enableAutoBalancing();
-    BMS.enableCharging();
-    BMS.enableDischarging();
+    // bms_set_protection();
+    // BMS.enableAutoBalancing();
+    // BMS.enableCharging();
+    // BMS.enableDischarging();
     
     Serial.println("-----------------------");
 
@@ -190,6 +190,8 @@ void i2c_rw_test(){
 // get_bms_values(): get temp, current, voltage readings
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
+
+    BMS.checkStatus();
 
     BMS.updateBalancingSwitches();
 
