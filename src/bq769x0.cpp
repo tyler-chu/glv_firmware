@@ -180,8 +180,10 @@ bool bq769x0::determineAddressAndCrc(void)
 
 // xready_handling(): xr error 
 void bq769x0::xready_handling(){
-  // led_fault(): turn led red
-  LOG_PRINTLN(F("Clearing XR Error ..."));
+  // analogWrite(11, 255); // R
+  // analogWrite(13, 0); // G
+  // analogWrite(15, 0); // B
+  LOG_PRINTLN(F("- Clearing XR Error ..."));
   writeRegister(SYS_STAT, B00100000);
 }
 
@@ -246,13 +248,13 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
-  delay(2000);
+  // delay(2000);
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
   // fault = NONE
   if (alertInterruptFlag == false && errorStatus == 0){
-    Serial.println("No Error Detected...");
+    Serial.println("[No Error Detected...]");
     return 0;
   }
   
@@ -262,7 +264,6 @@ int bq769x0::checkStatus()
     sys_stat.regByte = readRegister(SYS_STAT);
 
     // UI: shows user which faults are present (all 0 if none)
-    LOG_PRINTLN("-----------------------");
     LOG_PRINTLN("checkStatus(): Running...");
 
     // prevents interrupts until fault is fixed 
@@ -303,12 +304,14 @@ int bq769x0::checkStatus()
           }
         }
 
-        if (sys_stat.regByte & B00100000) { // XR error
+        if (sys_stat.regByte == 160 || sys_stat.regByte == 32) { // XR error
           // datasheet recommendation: try to clear after waiting a few seconds
           if (secSinceErrorCounter % 3 == 0){
-            xready_handling();
-            Serial.print("SYS_STAT: ");
-            Serial.println(sys_stat.regByte);
+            // xready_handling();
+            LOG_PRINTLN(F("- Clearing XR Error ..."));
+            writeRegister(SYS_STAT, B00100000);
+            // Serial.print("SYS_STAT: ");
+            // Serial.println(sys_stat.regByte);
           }
         }
 
@@ -372,7 +375,7 @@ int bq769x0::checkStatus()
       errorStatus = 0;
     }
 
-    // FAULT_FLAG = false;
+    FAULT_FLAG = false;
     
     return errorStatus;
 

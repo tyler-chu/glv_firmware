@@ -7,6 +7,7 @@
 #include <LCD_CONFIG.h>
 #include <SD_Config.h>
 #include <BMS_Config.h>
+#include <bq769x0.h>
 
 #define LED_RED 11
 #define LED_GREEN 13
@@ -16,6 +17,8 @@
 ezButton button(MOMENTARY_SWITCH);
 volatile int led_state = LOW;   // LOW = logging (off), HIGH = logging (on)
 volatile int disp_counter = 0;  // used to indicate 1st iteration of a state (terminal output preferences)
+// int fault_counter = 0;
+
 
 // led_setup(): configures required pins as OUTPUT
 void led_setup(){
@@ -50,7 +53,46 @@ void led_boot(){
 
 // led_logging(): turns RGB LED (green) when MOMENTARY SWITCH is flipped to HIGH
 void led_logging(){
-    get_bms_values();
+
+    // led = RED
+    regSYS_STAT_t system_status;
+    system_status.regByte = BMS.readRegister(SYS_STAT);
+
+    // clear CC ready
+    // BMS.writeRegister(SYS_STAT, 128);
+
+    if (system_status.regByte != 0 && system_status.regByte != 128 && system_status.regByte != 160){
+        analogWrite(LED_RED, 255);
+        analogWrite(LED_GREEN, 0);
+        analogWrite(LED_BLUE, 0);
+
+        Serial.println("- BM IC State: [FAULT]");
+        Serial.println("- LED Color: [RED]\n");
+        Serial.print("SYS_STAT: ");
+        Serial.println(system_status.regByte);
+        Serial.println("- Clearing XR Error...");
+        Serial.println("-----------------------");
+
+        BMS.FAULT_FLAG = true;
+
+        
+        return;
+    }
+
+        // BMS.fault_counter++;
+
+        // if (BMS.fault_counter == 1){
+        //     Serial.println("- BM IC State: [FAULT]");
+        //     Serial.println("- LED Color: [RED]\n");
+        //     Serial.print("SYS_STAT: ");
+        //     Serial.println(system_status.regByte);
+        //     Serial.println("- Clearing XR Error...");
+        //     Serial.println("-----------------------");
+        // }
+
+   
+    
+    // get_bms_values();
     // BMS.checkStatus();
     // display on screen
     // update BMS_UI hex array

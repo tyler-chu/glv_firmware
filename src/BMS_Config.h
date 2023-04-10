@@ -19,11 +19,11 @@ float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
 // status_ISR(): 
-void IRAM_ATTR status_ISR(){
-    // continuously loop in checkStatus() if there is a fault
-    if (BMS.FAULT_FLAG == false)
-        BMS.checkStatus();
-}
+// void IRAM_ATTR status_ISR(){
+//     // continuously loop in checkStatus() if there is a fault
+//     if (BMS.FAULT_FLAG == false)
+//         BMS.checkStatus();
+// }
 
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
 void i2c_setup(){
@@ -191,7 +191,12 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
-    BMS.checkStatus();
+    if (BMS.FAULT_FLAG == true)
+        return;
+    
+    // BMS.fault_counter = 0;
+
+    // BMS.checkStatus();
 
     BMS.updateBalancingSwitches();
 
