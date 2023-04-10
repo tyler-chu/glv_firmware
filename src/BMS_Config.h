@@ -193,6 +193,11 @@ void get_bms_values(){
 
     if (BMS.FAULT_FLAG == true)
         return;
+
+    regSYS_STAT_t system_status;
+    system_status.regByte = BMS.readRegister(SYS_STAT);
+    Serial.print("SYS_STAT: ");
+    Serial.println(system_status.regByte);
     
     // BMS.fault_counter = 0;
 
