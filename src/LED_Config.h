@@ -61,7 +61,7 @@ void led_logging(){
     // clear CC ready
     // BMS.writeRegister(SYS_STAT, 128);
 
-    if (system_status.regByte != 0 && system_status.regByte != 128 && system_status.regByte != 160){
+    if (system_status.regByte == 32 || system_status.regByte == 160){
         analogWrite(LED_RED, 255);
         analogWrite(LED_GREEN, 0);
         analogWrite(LED_BLUE, 0);

@@ -248,23 +248,32 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
+  LOG_PRINTLN("checkStatus(): Running...");
   // delay(2000);
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
   // fault = NONE
-  if (alertInterruptFlag == false && errorStatus == 0){
+  // if (alertInterruptFlag == false && errorStatus == 0){
+  //   Serial.println("[No Error Detected...]");
+  //   return 0;
+  // }
+
+  regSYS_STAT_t sys_stat;
+  sys_stat.regByte = readRegister(SYS_STAT);
+
+  // no fault/error
+  if (sys_stat.regByte == 0 || sys_stat.regByte == 128){
     Serial.println("[No Error Detected...]");
     return 0;
   }
-  
+
   // fault = detected
   else {
-    regSYS_STAT_t sys_stat;
-    sys_stat.regByte = readRegister(SYS_STAT);
+    // regSYS_STAT_t sys_stat;
+    // sys_stat.regByte = readRegister(SYS_STAT);
 
     // UI: shows user which faults are present (all 0 if none)
-    LOG_PRINTLN("checkStatus(): Running...");
 
     // prevents interrupts until fault is fixed 
     // FAULT_FLAG = true;
