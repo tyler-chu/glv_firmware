@@ -200,7 +200,7 @@ int bq769x0::checkStatus()
   // UI: shows user which faults are present (all 0 if none)
   LOG_PRINTLN("-----------------------");
   LOG_PRINTLN("checkStatus(): Running...");
-  LOG_PRINT("- Device XReady: \t");
+  LOG_PRINT("- XR: \t");
   LOG_PRINTLN(DEVICE_XREADY);
   LOG_PRINT("- UV: \t ");
   LOG_PRINTLN(UV);
@@ -265,7 +265,7 @@ int bq769x0::checkStatus()
           if (secSinceErrorCounter % 3 == 0) {
             // led_fault();
 
-            LOG_PRINTLN(F("Clearing DEVICE_XREADY ..."));
+            LOG_PRINTLN(F("Clearing XR Error ..."));
             writeRegister(SYS_STAT, B00100000);
 
           }
