@@ -248,7 +248,7 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
-  LOG_PRINTLN("checkStatus(): Running...");
+  // LOG_PRINTLN("checkStatus(): Running...");
   // delay(2000);
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -264,7 +264,7 @@ int bq769x0::checkStatus()
 
   // no fault/error
   if (sys_stat.regByte == 0 || sys_stat.regByte == 128){
-    Serial.println("[No Error Detected...]");
+    // Serial.println("[No Error Detected...]");
     return 0;
   }
 
@@ -317,7 +317,7 @@ int bq769x0::checkStatus()
           // datasheet recommendation: try to clear after waiting a few seconds
           if (secSinceErrorCounter % 3 == 0){
             // xready_handling();
-            LOG_PRINTLN(F("- Clearing XR Error ..."));
+            // LOG_PRINTLN(F("- Clearing XR Error ..."));
             writeRegister(SYS_STAT, B00100000);
             // Serial.print("SYS_STAT: ");
             // Serial.println(sys_stat.regByte);

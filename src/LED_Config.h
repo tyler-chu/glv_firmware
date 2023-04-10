@@ -61,34 +61,45 @@ void led_logging(){
     // clear CC ready
     // BMS.writeRegister(SYS_STAT, 128);
 
+    // if (system_status.regByte == 32 || system_status.regByte == 160){
+    //     analogWrite(LED_RED, 255);
+    //     analogWrite(LED_GREEN, 0);
+    //     analogWrite(LED_BLUE, 0);
+
+    //     Serial.println("- BM IC State: [FAULT]");
+    //     Serial.println("- LED Color: [RED]\n");
+    //     Serial.print("SYS_STAT: ");
+    //     Serial.println(system_status.regByte);
+    //     Serial.println("- Clearing XR Error...");
+    //     Serial.println("-----------------------");
+
+    //     BMS.FAULT_FLAG = true;
+
+        
+    //     return;
+    // }
+
+    BMS.fault_counter++;
+
+    // todo: diagnosis other errors here
+
     if (system_status.regByte == 32 || system_status.regByte == 160){
         analogWrite(LED_RED, 255);
         analogWrite(LED_GREEN, 0);
         analogWrite(LED_BLUE, 0);
 
-        Serial.println("- BM IC State: [FAULT]");
-        Serial.println("- LED Color: [RED]\n");
-        Serial.print("SYS_STAT: ");
-        Serial.println(system_status.regByte);
-        Serial.println("- Clearing XR Error...");
-        Serial.println("-----------------------");
+        if (BMS.fault_counter == 1){
+            Serial.println("- BM IC State: [FAULT]");
+            Serial.println("- LED Color: [RED]\n");
+            Serial.print("SYS_STAT: ");
+            Serial.println(system_status.regByte);
+            Serial.println("- XR Error [y]");
+            Serial.println("-----------------------");
+        }
 
         BMS.FAULT_FLAG = true;
-
-        
         return;
     }
-
-        // BMS.fault_counter++;
-
-        // if (BMS.fault_counter == 1){
-        //     Serial.println("- BM IC State: [FAULT]");
-        //     Serial.println("- LED Color: [RED]\n");
-        //     Serial.print("SYS_STAT: ");
-        //     Serial.println(system_status.regByte);
-        //     Serial.println("- Clearing XR Error...");
-        //     Serial.println("-----------------------");
-        // }
 
    
     

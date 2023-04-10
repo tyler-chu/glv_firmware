@@ -199,7 +199,7 @@ void get_bms_values(){
     Serial.print("SYS_STAT: ");
     Serial.println(system_status.regByte);
     
-    // BMS.fault_counter = 0;
+    BMS.fault_counter = 0;
 
     // BMS.checkStatus();
 
@@ -224,7 +224,8 @@ void get_bms_values(){
     Serial.println(temp_ts2);
 
     Serial.print("I_o: ");
-    Serial.println(current);
+    // Serial.println(current);
+    Serial.println("0");
 
     Serial.print("V_bat: ");
     Serial.println(voltage);
