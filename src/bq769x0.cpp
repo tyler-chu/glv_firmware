@@ -178,6 +178,16 @@ bool bq769x0::determineAddressAndCrc(void)
   return false;
 }
 
+
+void bq769x0::xready_handling(uint8_t reg_byte){
+  if (sys_stat.regBbye & B0010000) {
+    
+  }
+}
+
+
+
+
 //----------------------------------------------------------------------------
 // Fast function to check whether BMS has an error
 // (returns 0 if everything is OK)
@@ -186,32 +196,6 @@ int bq769x0::checkStatus()
 {
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
-
-  // fault definitions
-  int DEVICE_XREADY = 0;
-  int OVRD_ALERT = 0;
-  int UV = 0;
-  int OV = 0;
-  int SCD = 0;
-  int OCD = 0;
-
-  // TODO: diagnose which errors are present
-
-  // UI: shows user which faults are present (all 0 if none)
-  LOG_PRINTLN("-----------------------");
-  LOG_PRINTLN("checkStatus(): Running...");
-  LOG_PRINT("- XR: \t");
-  LOG_PRINTLN(DEVICE_XREADY);
-  LOG_PRINT("- UV: \t ");
-  LOG_PRINTLN(UV);
-  LOG_PRINT("- OV: \t ");
-  LOG_PRINTLN(OV);
-  LOG_PRINT("- SCD: \t ");
-  LOG_PRINTLN(SCD);
-  LOG_PRINT("- OCD: \t ");
-  LOG_PRINTLN(OCD);
-  LOG_PRINTLN("-----------------------");
-
   
   // fault = NONE
   if (alertInterruptFlag == false && errorStatus == 0)
@@ -221,6 +205,31 @@ int bq769x0::checkStatus()
   else {
     regSYS_STAT_t sys_stat;
     sys_stat.regByte = readRegister(SYS_STAT);
+
+    // fault definitions
+    int DEVICE_XREADY = 0;
+    int OVRD_ALERT = 0;
+    int UV = 0;
+    int OV = 0;
+    int SCD = 0;
+    int OCD = 0;
+
+    // TODO: diagnose which errors are present
+
+    // UI: shows user which faults are present (all 0 if none)
+    LOG_PRINTLN("-----------------------");
+    LOG_PRINTLN("checkStatus(): Running...");
+    LOG_PRINT("- XR: \t");
+    LOG_PRINTLN(DEVICE_XREADY);
+    LOG_PRINT("- UV: \t ");
+    LOG_PRINTLN(UV);
+    LOG_PRINT("- OV: \t ");
+    LOG_PRINTLN(OV);
+    LOG_PRINT("- SCD: \t ");
+    LOG_PRINTLN(SCD);
+    LOG_PRINT("- OCD: \t ");
+    LOG_PRINTLN(OCD);
+    LOG_PRINTLN("-----------------------");
 
     // prevents interrupts until fault is fixed 
     FAULT_FLAG = true;
