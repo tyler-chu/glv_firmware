@@ -46,6 +46,8 @@ class bq769x0 {
 
   public:
 
+    bool FAULT_FLAG = false;
+
     void writeRegister(byte address, int data);
     int readRegister(byte address);
     bool determineAddressAndCrc(void);

@@ -18,10 +18,12 @@ bq769x0 BMS;                                        // BMS Object
 float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
-// void IRAM_ATTR status_ISR(){
-//     if (!FAULT_FLAG)
-//         BMS.checkStatus();
-// }
+// status_ISR(): 
+void IRAM_ATTR status_ISR(){
+    // continuously loop in checkStatus() if there is a fault
+    if (BMS.FAULT_FLAG == false)
+        BMS.checkStatus();
+}
 
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
 void i2c_setup(){
@@ -80,7 +82,6 @@ void i2c_scanner(){
 
 }
 
-
 // bms_set_protection: sets up thresholds for protection
 void bms_set_protection(){
     Serial.println("bms_set_protection(): Running...");
@@ -115,10 +116,10 @@ void bms_setup(){
     BMS.begin(ALERT_PIN, 3);   // (alert, boot)
 
     // config timer for interrupt (5 sec timer)
-    // status_cfg = timerBegin(0, 40, true);
-    // timerAttachInterrupt(status_cfg, &status_ISR, true);
-    // timerAlarmWrite(status_cfg, 5000000, true);
-    // timerAlarmEnable(status_cfg);
+    status_cfg = timerBegin(0, 40, true);
+    timerAttachInterrupt(status_cfg, &status_ISR, true);
+    timerAlarmWrite(status_cfg, 5000000, true);
+    timerAlarmEnable(status_cfg);
     
     bms_set_protection();
     BMS.enableAutoBalancing();

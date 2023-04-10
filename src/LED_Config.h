@@ -115,7 +115,6 @@ int led_fault(){
 // ISR: momentary switch --> toggle led_state
 void IRAM_ATTR toggle_logging(){
     led_state = !led_state;
-
     counter = 0;        // reset: new file 
     disp_counter = 0;
 }

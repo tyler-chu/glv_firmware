@@ -28,6 +28,7 @@
 #include <bq769x0.h>
 #include <registers.h>
 #include <stdlib.h>
+#include <string>
 // #include <LED_CONFIG.h>
 
 // for the ISR to know the bq769x0 instance
@@ -183,19 +184,45 @@ bool bq769x0::determineAddressAndCrc(void)
 
 int bq769x0::checkStatus()
 {
-   byte sys_ctrl2;
-   sys_ctrl2 = readRegister(SYS_CTRL2);
+  byte sys_ctrl2;
+  sys_ctrl2 = readRegister(SYS_CTRL2);
 
-   LOG_PRINT("checkStatus: ");
-   LOG_PRINTLN(errorStatus);
-  if (alertInterruptFlag == false && errorStatus == 0) {
+  // fault definitions
+  int DEVICE_XREADY = 0;
+  int OVRD_ALERT = 0;
+  int UV = 0;
+  int OV = 0;
+  int SCD = 0;
+  int OCD = 0;
+
+  // TODO: diagnose which errors are present
+
+  // UI: shows user which faults are present (all 0 if none)
+  LOG_PRINTLN("-----------------------");
+  LOG_PRINTLN("checkStatus(): Running...");
+  LOG_PRINT("- Device XReady: \t");
+  LOG_PRINTLN(DEVICE_XREADY);
+  LOG_PRINT("- UV: \t ");
+  LOG_PRINTLN(UV);
+  LOG_PRINT("- OV: \t ");
+  LOG_PRINTLN(OV);
+  LOG_PRINT("- SCD: \t ");
+  LOG_PRINTLN(SCD);
+  LOG_PRINT("- OCD: \t ");
+  LOG_PRINTLN(OCD);
+  LOG_PRINTLN("-----------------------");
+
+  
+  // fault = NONE
+  if (alertInterruptFlag == false && errorStatus == 0)
     return 0;
-  }
+  
+  // fault = detected
   else {
     regSYS_STAT_t sys_stat;
     sys_stat.regByte = readRegister(SYS_STAT);
 
-    // there is a fault
+    // prevents interrupts until fault is fixed 
     FAULT_FLAG = true;
 
     if (sys_stat.bits.CC_READY == 1) {
@@ -238,7 +265,7 @@ int bq769x0::checkStatus()
           if (secSinceErrorCounter % 3 == 0) {
             // led_fault();
 
-            LOG_PRINTLN(F("Clearing XR error"));
+            LOG_PRINTLN(F("Clearing DEVICE_XREADY ..."));
             writeRegister(SYS_STAT, B00100000);
 
           }
