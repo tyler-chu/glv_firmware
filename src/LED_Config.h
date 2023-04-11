@@ -14,6 +14,18 @@
 #define LED_BLUE 15
 #define MOMENTARY_SWITCH 1
 
+// circuit fault macros
+#define XREADY1 32
+#define XREADY2 160
+#define UV1 8
+#define UV2 136
+#define OV1 4
+#define OV2 132
+#define SCD1 2
+#define SCD2 130
+// #define OCD1 1
+// #define OCD2 129
+
 ezButton button(MOMENTARY_SWITCH);
 volatile int led_state = LOW;   // LOW = logging (off), HIGH = logging (on)
 volatile int disp_counter = 0;  // used to indicate 1st iteration of a state (terminal output preferences)
@@ -51,64 +63,84 @@ void led_boot(){
     //     Serial.println("-----------------------");
 }
 
-// led_logging(): turns RGB LED (green) when MOMENTARY SWITCH is flipped to HIGH
-void led_logging(){
+// led_fault(): turns RGB LED (red) when a circuit fault is detected 
+void led_fault(){
+    analogWrite(LED_RED, 255);
+    analogWrite(LED_GREEN, 0);
+    analogWrite(LED_BLUE, 0);
+}
 
-    // led = RED
-    regSYS_STAT_t system_status;
-    system_status.regByte = BMS.readRegister(SYS_STAT);
+// fault_checker(): diagnose which fault is present 
+void fault_checker(uint8_t regByte){
 
-    // clear CC ready
-    // BMS.writeRegister(SYS_STAT, 128);
+    switch(regByte) {
+        case XREADY1:
+            Serial.println("- XR Error [y]");
+            break;
+        case XREADY2:
+            Serial.println("- XR Error [y]");
+            break;
+        case UV1:
+            Serial.println("- UV Error [y]");
+            break;
+        case UV2:
+            Serial.println("- UV Error [y]");
+            break;
+        case OV1:
+            Serial.println("- OV Error [y]");
+            break;
+        case OV2:
+            Serial.println("- OV Error [y]");
+            break;
+        case SCD1:
+            Serial.println("- SCD Error [y]");
+            break;
+        case SCD2:
+            Serial.println("- SCD Error [y]");
+            break;
+        // case OCD1:
+        //     Serial.println("- OCD Error [y]");
+        //     break;
+        // case OCD2:
+        //     Serial.println("- OCD Error [y]");
+        //     break;
+        }
+}
 
-    // if (system_status.regByte == 32 || system_status.regByte == 160){
-    //     analogWrite(LED_RED, 255);
-    //     analogWrite(LED_GREEN, 0);
-    //     analogWrite(LED_BLUE, 0);
+// fault_detection(): check to see if a fault is present 
+void fault_detection(uint8_t regByte){
+    
+    // check if a fault is present 
+    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2){
 
-    //     Serial.println("- BM IC State: [FAULT]");
-    //     Serial.println("- LED Color: [RED]\n");
-    //     Serial.print("SYS_STAT: ");
-    //     Serial.println(system_status.regByte);
-    //     Serial.println("- Clearing XR Error...");
-    //     Serial.println("-----------------------");
+        led_fault();    // turn LED red 
 
-    //     BMS.FAULT_FLAG = true;
-
-        
-    //     return;
-    // }
-
-    BMS.fault_counter++;
-
-    // todo: diagnosis other errors here
-
-    if (system_status.regByte == 32 || system_status.regByte == 160){
-        analogWrite(LED_RED, 255);
-        analogWrite(LED_GREEN, 0);
-        analogWrite(LED_BLUE, 0);
-
+        // 1st iteration of fault being present 
         if (BMS.fault_counter == 1){
             Serial.println("- BM IC State: [FAULT]");
             Serial.println("- LED Color: [RED]\n");
             Serial.print("SYS_STAT: ");
-            Serial.println(system_status.regByte);
-            Serial.println("- XR Error [y]");
-            Serial.println("-----------------------");
+            Serial.println(regByte);
+            fault_checker(regByte);
         }
 
-        BMS.FAULT_FLAG = true;
-        return;
+        BMS.FAULT_FLAG = true;  // do not collect data until fault is resolved 
     }
+}
 
-   
-    
-    // get_bms_values();
-    // BMS.checkStatus();
-    // display on screen
-    // update BMS_UI hex array
-    // led_display();
- 
+
+// led_logging(): turns RGB LED (green) when MOMENTARY SWITCH is flipped to HIGH
+void led_logging(){
+
+    regSYS_STAT_t fault_reg;
+    fault_reg.regByte = BMS.readRegister(SYS_STAT);
+    BMS.fault_counter++;
+
+    // fault detection
+    fault_detection(fault_reg.regByte);
+    if (BMS.FAULT_FLAG)
+        return;
+
     // momentary switch (HIGH) --> logging state
     if (led_state == HIGH && disp_counter == 1){
         Serial.println("- BM IC State: [LOGGING]");
@@ -150,26 +182,13 @@ void led_logging(){
 
 }
 
-// led_fault(): turns RGB LED (red) when a circuit fault is detected 
-int led_fault(){
-    // TODO: implement circuit fault handling functions
-    Serial.println("- BM IC State: [CIRCUIT FAULT]");
-    Serial.println("- LED Color: [Red]");
-    
-    // TODO: turn LED Color --> RED
-    analogWrite(LED_RED, 255);
-    analogWrite(LED_GREEN, 0);
-    analogWrite(LED_BLUE, 0);
-
-
-    return 0;
-}
 
 // ISR: momentary switch --> toggle led_state
 void IRAM_ATTR toggle_logging(){
-    led_state = !led_state;
-    counter = 0;        // reset: new file 
-    disp_counter = 0;
+    if (!(BMS.FAULT_FLAG))
+        led_state = !led_state;
+        counter = 0;        // reset: new file 
+        disp_counter = 0;
 }
 
 // switch_setup(): configures switch as an input_pullup, sets debounce time
