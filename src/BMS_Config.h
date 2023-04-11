@@ -126,7 +126,7 @@ void bms_setup(){
     // BMS.enableCharging();
     // BMS.enableDischarging();
     
-    Serial.println("-----------------------");
+    Serial.println("-----------------------------");
 
 }
 
@@ -148,7 +148,7 @@ void clear_sys_stat(){
     Serial.print(BMS.readRegister(SYS_STAT));
     Serial.println(")\t <-- SYS_STAT Register");
 
-    Serial.println("-----------------------");
+    Serial.println("-----------------------------");
 
 }
 
@@ -209,7 +209,8 @@ void get_bms_values(){
     temp_ts1 = BMS.getTemperatureDegC(TS1_CHANNEL);
     BMS.updateTemperatures2();
     temp_ts2 = BMS.getTemperatureDegC(TS2_CHANNEL);
-    // BMS.updateCurrent();
+
+    BMS.updateCurrent();
     BMS.updateVoltages();
 
     current = BMS.getBatteryCurrent();
@@ -217,22 +218,30 @@ void get_bms_values(){
     float divider = 1000.00f;
     voltage = (BMS.getBatteryVoltage())/divider;
 
-    Serial.print("Temp TS1: ");
-    Serial.println(temp_ts1);
+    // Serial.print("Temp TS1 [Ext/Ambient]: ");
+    // Serial.println(temp_ts1);
 
-    Serial.print("Temp TS2: ");
-    Serial.println(temp_ts2);
+    // Serial.print("Temp TS2 [Int/Die]: \t");
+    // Serial.println(temp_ts2);
 
     Serial.print("I_o: ");
     // Serial.println(current);
     Serial.println("0");
+    
+    // // Serial.print("I_o: ");
+    // // Serial.println(current);
 
-    Serial.print("V_bat: ");
-    Serial.println(voltage);
+    // // Serial.println("I_o: 2.53");
+    // // Serial.println(current);
 
-    Serial.println("-----------------------");
+    // Serial.print("V_bat [Pack Voltage]: \t");
+    // Serial.println(voltage);
+
+    // Serial.println("-----------------------------");
 
     delay(1000);
+
+    // BMS.checkStatus();
 
 }
 

@@ -176,9 +176,9 @@ void IRAM_ATTR toggle_logging(){
 void switch_setup(){
     Serial.println("switch_setup: Running...");
     Serial.println("-----------------------");
-    pinMode(MOMENTARY_SWITCH, INPUT_PULLUP);
+    pinMode(MOMENTARY_SWITCH, INPUT_PULLDOWN);
     button.setDebounceTime(50); // set debounce time to 50 milliseconds
-    attachInterrupt(digitalPinToInterrupt(MOMENTARY_SWITCH), toggle_logging, RISING);
+    attachInterrupt(digitalPinToInterrupt(MOMENTARY_SWITCH), toggle_logging, FALLING);
 }
 
 #endif
