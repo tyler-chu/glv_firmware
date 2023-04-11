@@ -29,7 +29,8 @@ void setup()
 
 void loop()
 {
-  // get_bms_values();
+  get_bms_values();
+  BMS.checkStatus();
   led_logging();
 }
 

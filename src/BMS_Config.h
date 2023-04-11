@@ -18,8 +18,11 @@ bq769x0 BMS;                                        // BMS Object
 float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
+// status_ISR(): 
 // void IRAM_ATTR status_ISR(){
-//     BMS.checkStatus();
+//     // continuously loop in checkStatus() if there is a fault
+//     if (BMS.FAULT_FLAG == false)
+//         BMS.checkStatus();
 // }
 
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
@@ -79,23 +82,38 @@ void i2c_scanner(){
 
 }
 
-
 // bms_set_protection: sets up thresholds for protection
 void bms_set_protection(){
     Serial.println("bms_set_protection(): Running...");
-    BMS.setTemperatureLimits(0, 0, 0, 0);
-    BMS.setShortCircuitProtection(0);
-    BMS.setOvercurrentChargeProtection(0);
-    BMS.setOvercurrentDischargeProtection(0);
-    BMS.setCellUndervoltageProtection(0);
-    BMS.setCellOvervoltageProtection(0);
+
+    BMS.updateTemperatures();
+    BMS.updateVoltages();
+
+    BMS.setThermistorBetaValue(3977);
+    BMS.setTemperatureLimits(-20, 45, 0, 45);
+    BMS.setShuntResistorValue(5);
+    BMS.setShortCircuitProtection(14000, 200);
+    BMS.setOvercurrentChargeProtection(8000, 200);
+    BMS.setOvercurrentDischargeProtection(8000, 320);
+    BMS.setCellUndervoltageProtection(2600, 2);
+    BMS.setCellOvervoltageProtection(3650, 2);
+
+    BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
+    BMS.setIdleCurrentThreshold(100);
+
+    // TODO:
+    // max voltage: 4V / per cell = 24 V (max pack voltage)
+    // under voltage: 2.7 * 6 = 16.2 V (min pack voltage)
+    // short circuit (20 A)
+    // temp (TS1: 60C, come up w/ ambient temp)
+
+
 }
 
 // bms_setup: configures BMS for data reading/protection
 void bms_setup(){
     Serial.println("bms_setup(): Running...");
     BMS.begin(ALERT_PIN, 3);   // (alert, boot)
-    BMS.setThermistorBetaValue(3977);
 
     // config timer for interrupt (5 sec timer)
     // status_cfg = timerBegin(0, 40, true);
@@ -103,11 +121,10 @@ void bms_setup(){
     // timerAlarmWrite(status_cfg, 5000000, true);
     // timerAlarmEnable(status_cfg);
     
+    // bms_set_protection();
+    // BMS.enableAutoBalancing();
     // BMS.enableCharging();
     // BMS.enableDischarging();
-    // BMS.updateBalancingSwitches();
-    
-    // bms_set_protection();
     
     Serial.println("-----------------------------");
 
@@ -174,15 +191,32 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
+    if (BMS.FAULT_FLAG == true)
+        return;
+
+    regSYS_STAT_t system_status;
+    system_status.regByte = BMS.readRegister(SYS_STAT);
+    Serial.print("SYS_STAT: ");
+    Serial.println(system_status.regByte);
+    
+    BMS.fault_counter = 0;
+
+    // BMS.checkStatus();
+
+    BMS.updateBalancingSwitches();
+
     BMS.updateTemperatures();
     temp_ts1 = BMS.getTemperatureDegC(TS1_CHANNEL);
     BMS.updateTemperatures2();
     temp_ts2 = BMS.getTemperatureDegC(TS2_CHANNEL);
+
     BMS.updateCurrent();
     BMS.updateVoltages();
 
     current = BMS.getBatteryCurrent();
-    voltage = (BMS.getBatteryVoltage())/1000;
+
+    float divider = 1000.00f;
+    voltage = (BMS.getBatteryVoltage())/divider;
 
     // Serial.print("Temp TS1 [Ext/Ambient]: ");
     // Serial.println(temp_ts1);
@@ -190,6 +224,10 @@ void get_bms_values(){
     // Serial.print("Temp TS2 [Int/Die]: \t");
     // Serial.println(temp_ts2);
 
+    Serial.print("I_o: ");
+    // Serial.println(current);
+    Serial.println("0");
+    
     // // Serial.print("I_o: ");
     // // Serial.println(current);
 
