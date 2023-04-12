@@ -116,6 +116,31 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
   file.close();
 }
 
+// check_logs(): determines which log# will be created next, prevents logs from being overwritten
+void check_logs(){
+  char log_buffer[10];  // ex: log999.csv
+  bool log_flag = false;
+
+  Serial.println("check_logs(): Running...");
+
+  // check existing logs on micro-sd card 
+  while (!log_flag){
+    sprintf(log_buffer, "log%d.csv", file_counter);
+
+    // if file already exists, then increment counter
+    readFile(SD, log_buffer);
+    if (file_exists){
+      file_counter++;
+    }
+
+    else{
+      log_flag = true;
+      Serial.println("- Dynamic Log Creation [y]");
+    }
+  }
+
+}
+
 // spi_setup(): configure SPI for SD card 
 void spi_setup(){
     delay(1000);
@@ -133,6 +158,8 @@ void spi_setup(){
         Serial.println("Error: No SD Card Attached");
         return;
     } 
+
+    check_logs(); // decide which file # to start on (dynamic log creation)
 }
 
 // set_log_start(): set log starting tme
@@ -186,30 +213,6 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
     
 }
 
-// check_logs(): determines which log# will be created next, prevents logs from being overwritten
-void check_logs(){
-  char log_buffer[10];  // ex: log999.csv
-  bool log_flag = false;
-
-  Serial.println("check_logs(): Running...");
-
-  // check existing logs on micro-sd card 
-  while (!log_flag){
-    sprintf(log_buffer, "log%d.csv", file_counter);
-
-    // if file already exists, then increment counter
-    readFile(SD, log_buffer);
-    if (file_exists){
-      file_counter++;
-    }
-
-    else{
-      log_flag = true;
-      Serial.println("- Dynamic Log Creation [y]");
-    }
-  }
-
-}
 
 // update time of file
 
