@@ -23,6 +23,7 @@ void setup()
   switch_setup();
   bms_setup();
   clear_sys_stat();
+  check_logs();
   // spi_setup();
   // lcd_setup();
 }

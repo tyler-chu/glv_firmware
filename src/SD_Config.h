@@ -19,6 +19,7 @@ int counter = 0;  // 0: write column headers for .csv, 1: write data values
 int file_counter = 0; // # = log#.csv (naming convention)
 char name_buffer[50];
 std::chrono::time_point<std::chrono::system_clock> start_time; // get the start timestamp
+bool file_exists = false;
 
 // listDir(), traverses through and lists all directories
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -69,12 +70,14 @@ void readFile(fs::FS &fs, const char * path){
   File file = fs.open(path);
   if(!file){
     Serial.println("Failed to open file for reading");
+    file_exists = false;  // file does not exist 
     return;
   }
 
   Serial.print("Read from file: ");
   while(file.available()){
     Serial.write(file.read());
+    file_exists = true;
   }
   file.close();
 }
@@ -182,6 +185,34 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
   Serial.println();
     
 }
+
+// check_logs(): determines which log# will be created next, prevents logs from being overwritten
+void check_logs(){
+  char log_buffer[10];  // ex: log999.csv
+  bool log_flag = false;
+
+  Serial.println("check_logs(): Running...");
+
+  // check existing logs on micro-sd card 
+  while (!log_flag){
+    sprintf(log_buffer, "log%d.csv", file_counter);
+
+    // if file already exists, then increment counter
+    readFile(SD, log_buffer);
+    if (file_exists){
+      file_counter++;
+    }
+
+    else{
+      log_flag = true;
+      Serial.println("- Dynamic Log Creation [y]");
+    }
+  }
+
+}
+
+// update time of file
+
 
 #endif
 
