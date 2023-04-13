@@ -117,6 +117,7 @@ void fault_detection(uint8_t regByte){
 
         // 1st iteration of fault being present 
         if (BMS.fault_counter == 1){
+            Serial.println("-----------------------");
             Serial.println("- BM IC State: [FAULT]");
             Serial.println("- LED Color: [RED]\n");
             Serial.print("SYS_STAT: ");

@@ -121,10 +121,10 @@ void bms_setup(){
     // timerAlarmWrite(status_cfg, 5000000, true);
     // timerAlarmEnable(status_cfg);
     
-    // bms_set_protection();
+    bms_set_protection();
     // BMS.enableAutoBalancing();
-    // BMS.enableCharging();
-    // BMS.enableDischarging();
+    BMS.enableCharging();
+    BMS.enableDischarging();
     
     Serial.println("-----------------------------");
 
@@ -219,25 +219,28 @@ void get_bms_values(){
     voltage = (BMS.getBatteryVoltage())/divider;
 
     // Serial.print("Temp TS1 [Ext/Ambient]: ");
-    // Serial.println(temp_ts1);
+    Serial.print("Temp TS1: ");
+    Serial.println(temp_ts1);
 
     // Serial.print("Temp TS2 [Int/Die]: \t");
-    // Serial.println(temp_ts2);
+    Serial.print("Temp TS2: ");
+    Serial.println(temp_ts2);
 
-    Serial.print("I_o: ");
-    // Serial.println(current);
-    Serial.println("0");
+    // Serial.print("I_o: ");
+    // // Serial.println(current);
+    // Serial.println("0");
     
-    // // Serial.print("I_o: ");
-    // // Serial.println(current);
+    Serial.print("I_o: \t  ");
+    Serial.println(current);
 
-    // // Serial.println("I_o: 2.53");
-    // // Serial.println(current);
+    // Serial.println("I_o: 2.53");
+    // Serial.println(current);
 
     // Serial.print("V_bat [Pack Voltage]: \t");
-    // Serial.println(voltage);
+    Serial.print("V_bat:    ");
+    Serial.println(voltage);
 
-    // Serial.println("-----------------------------");
+    Serial.println("-----------------------------");
 
     delay(1000);
 

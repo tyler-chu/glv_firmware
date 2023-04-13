@@ -296,7 +296,7 @@ int bq769x0::checkStatus()
         if (sys_stat.regByte & B00010000) { // Alert error
           if (secSinceErrorCounter % 10 == 0) {
 
-            LOG_PRINTLN(F("Clearing Alert Error ..."));
+            // LOG_PRINTLN(F("Clearing Alert Error ..."));
             writeRegister(SYS_STAT, B00010000);
           }
         }
@@ -304,7 +304,7 @@ int bq769x0::checkStatus()
         if (sys_stat.regByte == 32 || sys_stat.regByte == 160) { // XR error
           if (secSinceErrorCounter % 3 == 0){
 
-            LOG_PRINTLN(F("- Clearing XR Error ..."));
+            // LOG_PRINTLN(F("- Clearing XR Error ..."));
             writeRegister(SYS_STAT, B00100000);
           }
         }
@@ -313,7 +313,7 @@ int bq769x0::checkStatus()
           updateVoltages();
           if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
             
-            LOG_PRINTLN(F("- Clearing UV Error ..."));
+            // LOG_PRINTLN(F("- Clearing UV Error ..."));
             writeRegister(SYS_STAT, B00001000);
           }
         }
@@ -322,7 +322,7 @@ int bq769x0::checkStatus()
           updateVoltages();
           if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
 
-            LOG_PRINTLN(F("- Clearing OV Error ..."));
+            // LOG_PRINTLN(F("- Clearing OV Error ..."));
             writeRegister(SYS_STAT, B00000100); // clears fault
             // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
           }
@@ -331,7 +331,7 @@ int bq769x0::checkStatus()
         if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
           if (secSinceErrorCounter % 60 == 0) {
             
-            LOG_PRINTLN(F("- Clearing SCD Error ..."));
+            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
             writeRegister(SYS_STAT, B00000010);
           }
         }
@@ -752,7 +752,7 @@ int bq769x0::setCellOvervoltageProtection(int voltage_mV, int delay_s)
 
 long bq769x0::getBatteryCurrent()
 {
-  return batCurrent;
+  return (- batCurrent - 30);
 }
 
 //----------------------------------------------------------------------------
