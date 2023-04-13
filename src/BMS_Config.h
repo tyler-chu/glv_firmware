@@ -15,7 +15,7 @@
 const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
 // const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
-float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
+float temp, temp_ts1, temp_ts2, current, voltage, bat_percentage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
 // status_ISR(): 
@@ -242,6 +242,15 @@ void get_bms_values(){
     // Serial.print("V_bat [Pack Voltage]: \t");
     Serial.print("V_bat:    ");
     Serial.println(voltage);
+
+    // max voltage: (4.15 * 6 = 24.9)
+    // min voltage: (2.8 * 6 = 16.8)
+    // range = 8.1 v
+
+    bat_percentage = ((voltage - 16.8) / 8.1) * 100;
+
+    Serial.print("Bat %:    ");
+    Serial.println(bat_percentage);
 
     Serial.println("-----------------------------");
 

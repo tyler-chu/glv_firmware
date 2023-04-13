@@ -164,7 +164,7 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
   else
     sprintf(formatted_seconds, "%d", seconds);
   
-  sprintf(buffer, "%s:%s,%f,%f,%f,%f,0\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage);
+  sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage);
 
   // 1st iteration, creates .csv file w/ column headers
   if (counter == 0){
