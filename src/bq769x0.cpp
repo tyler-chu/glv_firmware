@@ -248,8 +248,6 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
-  // LOG_PRINTLN("checkStatus(): Running...");
-  // delay(2000);
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
@@ -270,13 +268,6 @@ int bq769x0::checkStatus()
 
   // fault = detected
   else {
-    // regSYS_STAT_t sys_stat;
-    // sys_stat.regByte = readRegister(SYS_STAT);
-
-    // UI: shows user which faults are present (all 0 if none)
-
-    // prevents interrupts until fault is fixed 
-    // FAULT_FLAG = true;
 
     if (sys_stat.bits.CC_READY == 1) {
       //LOG_PRINTLN("Interrupt: CC ready");
@@ -304,73 +295,55 @@ int bq769x0::checkStatus()
       {
         if (sys_stat.regByte & B00010000) { // Alert error
           if (secSinceErrorCounter % 10 == 0) {
-            // led_fault();
-            // stop balancing equations
 
-            // (CHG, DSG FETs are disconnect automatically)
-            LOG_PRINTLN(F("Clearing Alert error"));
+            // LOG_PRINTLN(F("Clearing Alert Error ..."));
             writeRegister(SYS_STAT, B00010000);
           }
         }
 
-        if (sys_stat.regByte == 160 || sys_stat.regByte == 32) { // XR error
-          // datasheet recommendation: try to clear after waiting a few seconds
+        if (sys_stat.regByte == 32 || sys_stat.regByte == 160) { // XR error
           if (secSinceErrorCounter % 3 == 0){
-            // xready_handling();
+
             // LOG_PRINTLN(F("- Clearing XR Error ..."));
             writeRegister(SYS_STAT, B00100000);
-            // Serial.print("SYS_STAT: ");
-            // Serial.println(sys_stat.regByte);
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
           }
         }
 
-        if (sys_stat.regByte & B00001000) { // UV error
+        if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
           updateVoltages();
           if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
-            // led_fault();
-
-
-
-
-            LOG_PRINTLN(F("Clearing UV error"));
+            
+            // LOG_PRINTLN(F("- Clearing UV Error ..."));
             writeRegister(SYS_STAT, B00001000);
           }
         }
 
-        if (sys_stat.regByte & B00000100) { // OV error
-          while (FAULT_FLAG){
-            updateVoltages();
-            if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
-              // led_fault();
-              // FAULT_FLAG = false;
-            }
-          }
+        if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
+          updateVoltages();
+          if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
 
-          LOG_PRINTLN(F("Clearing OV error"));
-          writeRegister(SYS_STAT, B00000100); // clears fault
-          writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+            // LOG_PRINTLN(F("- Clearing OV Error ..."));
+            writeRegister(SYS_STAT, B00000100); // clears fault
+            // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+          }
         }
 
-        if (sys_stat.regByte & B00000010) { // SCD
+        if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
           if (secSinceErrorCounter % 60 == 0) {
-            // led_fault();
-
-
-
-
-            LOG_PRINTLN(F("Clearing SCD error"));
+            
+            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
             writeRegister(SYS_STAT, B00000010);
           }
         }
 
 
+        // TODO: temperature fault handling 
+
+
         // not mandatory
         if (sys_stat.regByte & B00000001) { // OCD
           if (secSinceErrorCounter % 60 == 0) {
-            // led_fault();
-
-
-
 
             LOG_PRINTLN(F("Clearing OCD error"));
             writeRegister(SYS_STAT, B00000001);
@@ -427,7 +400,7 @@ bool bq769x0::enableCharging()
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000001);  // switch CHG on
-    LOG_PRINTLN("enableCharging: enabled");
+    LOG_PRINTLN("enableCharging(): Enabled");
 
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
     Serial.println(cellVoltages[idCellMaxVoltage]);
@@ -447,7 +420,7 @@ bool bq769x0::enableCharging()
     return true;
   }
   else {
-    LOG_PRINTLN("enableCharging: failed");
+    LOG_PRINTLN("enableCharging(): Failed");
     
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
     Serial.println(cellVoltages[idCellMaxVoltage]);
@@ -473,7 +446,7 @@ bool bq769x0::enableCharging()
 
 bool bq769x0::enableDischarging()
 {
-  LOG_PRINTLN("enableDischarging");
+  LOG_PRINTLN("enableDischarging()");
   if (checkStatus() == 0 &&
     cellVoltages[idCellMinVoltage] > minCellVoltage &&
     temperatures[0] < maxCellTempDischarge &&
@@ -482,11 +455,11 @@ bool bq769x0::enableDischarging()
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000010);  // switch DSG on
-    LOG_PRINTLN("enableDischarging: enabled");
+    LOG_PRINTLN("enableDischarging(): Enabled");
     return true;
   }
   else {
-    LOG_PRINTLN("enableDischarging: failed");
+    LOG_PRINTLN("enableDischarging(): Failed");
 
     Serial.print("cellVoltages[idCellMinVoltage]: ");
     Serial.println(cellVoltages[idCellMinVoltage]);
@@ -780,7 +753,7 @@ int bq769x0::setCellOvervoltageProtection(int voltage_mV, int delay_s)
 
 long bq769x0::getBatteryCurrent()
 {
-  return batCurrent;
+  return (- batCurrent - 30);
 }
 
 //----------------------------------------------------------------------------
