@@ -187,61 +187,6 @@ void bq769x0::xready_handling(){
   writeRegister(SYS_STAT, B00100000);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// joey
-
-
 //----------------------------------------------------------------------------
 // Fast function to check whether BMS has an error
 // (returns 0 if everything is OK)
@@ -261,7 +206,7 @@ int bq769x0::checkStatus()
   sys_stat.regByte = readRegister(SYS_STAT);
 
   // no fault/error
-  if (sys_stat.regByte == 0 || sys_stat.regByte == 128){
+  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128)) && (!TEMP_FAULT)){
     // Serial.println("[No Error Detected...]");
     return 0;
   }
@@ -338,6 +283,15 @@ int bq769x0::checkStatus()
         }
 
 
+        // temp error 
+        if (TEMP_FAULT){
+          writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
+
+          if (secSinceErrorCounter % 3 == 0)
+            updateTemperatures2();
+        }
+
+
         // TODO: temperature fault handling 
 
 
@@ -345,7 +299,7 @@ int bq769x0::checkStatus()
         if (sys_stat.regByte & B00000001) { // OCD
           if (secSinceErrorCounter % 60 == 0) {
 
-            LOG_PRINTLN(F("Clearing OCD error"));
+            // LOG_PRINTLN(F("Clearing OCD error"));
             writeRegister(SYS_STAT, B00000001);
           }
         }
@@ -358,6 +312,8 @@ int bq769x0::checkStatus()
     }
 
     FAULT_FLAG = false;
+    TEMP_FAULT = false;
+    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
     
     return errorStatus;
 
@@ -861,6 +817,18 @@ void bq769x0::updateTemperatures2()
     
     // update channel 2 temp (TS2)
     temperatures[1] = (tmp - 273.15) * 10.0;
+
+
+    // check viable ambient temperature
+    if (temperatures[1] <= minCellTempDischarge || temperatures[1] >= maxCellTempCharge){
+      FAULT_FLAG = true;
+      TEMP_FAULT = true;
+    }
+
+    else{
+      FAULT_FLAG = false;
+      TEMP_FAULT = false;
+    }
   }
 
   // set TEMP_SEL bit

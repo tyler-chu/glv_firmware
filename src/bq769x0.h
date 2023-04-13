@@ -47,6 +47,7 @@ class bq769x0 {
   public:
 
     bool FAULT_FLAG = false;
+    bool TEMP_FAULT = false;
     int fault_counter = 0;
     void xready_handling();
 

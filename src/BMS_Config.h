@@ -87,6 +87,7 @@ void bms_set_protection(){
     Serial.println("bms_set_protection(): Running...");
 
     BMS.updateTemperatures();
+    // BMS.updateTemperatures2();
     BMS.updateVoltages();
 
     BMS.setThermistorBetaValue(3977);

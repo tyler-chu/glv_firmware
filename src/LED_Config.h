@@ -113,13 +113,17 @@ void fault_checker(uint8_t regByte){
         //     Serial.println("- OCD Error [y]");
         //     break;
         }
+    
+    if (BMS.TEMP_FAULT){
+        Serial.println("- Temperature Error [y]");
+    }
 }
 
 // fault_detection(): check to see if a fault is present 
 void fault_detection(uint8_t regByte){
     
     // check if a fault is present 
-    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2){
+    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || (BMS.TEMP_FAULT)){
 
         led_fault();    // turn LED red 
 
