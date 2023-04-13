@@ -90,18 +90,15 @@ void bms_set_protection(){
     BMS.updateVoltages();
 
     BMS.setThermistorBetaValue(3977);
-    BMS.setTemperatureLimits(-20, 45, 0, 45);
+    BMS.setTemperatureLimits(-35, 55, 0, 55);
     BMS.setShuntResistorValue(5);
     BMS.setShortCircuitProtection(14000, 200);
+
     BMS.setOvercurrentChargeProtection(8000, 200);
     BMS.setOvercurrentDischargeProtection(8000, 320);
-    BMS.setCellUndervoltageProtection(2000, 2);
-    BMS.setCellOvervoltageProtection(4000, 2);
 
     BMS.setCellUndervoltageProtection(2700, 2);
     BMS.setCellOvervoltageProtection(4000, 2);
-
-    // BMS.setCellOvervoltageProtection(21000, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
