@@ -218,9 +218,9 @@ void get_bms_values(){
     BMS.updateCurrent();
     BMS.updateVoltages();
 
-    current = BMS.getBatteryCurrent();
-
     float divider = 1000.00f;
+
+    current = (BMS.getBatteryCurrent())/divider;
     voltage = (BMS.getBatteryVoltage())/divider;
 
     // Serial.print("Temp TS1 [Ext/Ambient]: ");

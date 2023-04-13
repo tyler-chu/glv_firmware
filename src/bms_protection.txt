@@ -22,8 +22,5 @@ void bms_set_protection(){
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
 
-    // TODO:
-
-
 
 }
