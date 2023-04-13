@@ -23,6 +23,8 @@
 #define OV2 132
 #define SCD1 2
 #define SCD2 130
+#define UTEMP 254
+#define OTEMP 255
 // #define OCD1 1
 // #define OCD2 129
 
@@ -97,6 +99,12 @@ void fault_checker(uint8_t regByte){
             break;
         case SCD2:
             Serial.println("- SCD Error [y]");
+            break;
+        case UTEMP:
+            Serial.println("- UTEMP Error [y]");
+            break;
+        case OTEMP:
+            Serial.println("- OTEMP Error [y]");
             break;
         // case OCD1:
         //     Serial.println("- OCD Error [y]");

@@ -95,8 +95,13 @@ void bms_set_protection(){
     BMS.setShortCircuitProtection(14000, 200);
     BMS.setOvercurrentChargeProtection(8000, 200);
     BMS.setOvercurrentDischargeProtection(8000, 320);
-    BMS.setCellUndervoltageProtection(2600, 2);
-    BMS.setCellOvervoltageProtection(3650, 2);
+    BMS.setCellUndervoltageProtection(2000, 2);
+    BMS.setCellOvervoltageProtection(4000, 2);
+
+    BMS.setCellUndervoltageProtection(2700, 2);
+    BMS.setCellOvervoltageProtection(4000, 2);
+
+    // BMS.setCellOvervoltageProtection(21000, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
@@ -122,7 +127,7 @@ void bms_setup(){
     // timerAlarmEnable(status_cfg);
     
     bms_set_protection();
-    // BMS.enableAutoBalancing();
+    BMS.enableAutoBalancing();
     BMS.enableCharging();
     BMS.enableDischarging();
     

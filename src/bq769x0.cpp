@@ -306,6 +306,7 @@ int bq769x0::checkStatus()
 
             // LOG_PRINTLN(F("- Clearing XR Error ..."));
             writeRegister(SYS_STAT, B00100000);
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
           }
         }
 
@@ -399,7 +400,7 @@ bool bq769x0::enableCharging()
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000001);  // switch CHG on
-    LOG_PRINTLN("enableCharging: enabled");
+    LOG_PRINTLN("enableCharging(): Enabled");
 
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
     Serial.println(cellVoltages[idCellMaxVoltage]);
@@ -419,7 +420,7 @@ bool bq769x0::enableCharging()
     return true;
   }
   else {
-    LOG_PRINTLN("enableCharging: failed");
+    LOG_PRINTLN("enableCharging(): Failed");
     
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
     Serial.println(cellVoltages[idCellMaxVoltage]);
@@ -445,7 +446,7 @@ bool bq769x0::enableCharging()
 
 bool bq769x0::enableDischarging()
 {
-  LOG_PRINTLN("enableDischarging");
+  LOG_PRINTLN("enableDischarging()");
   if (checkStatus() == 0 &&
     cellVoltages[idCellMinVoltage] > minCellVoltage &&
     temperatures[0] < maxCellTempDischarge &&
@@ -454,11 +455,11 @@ bool bq769x0::enableDischarging()
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000010);  // switch DSG on
-    LOG_PRINTLN("enableDischarging: enabled");
+    LOG_PRINTLN("enableDischarging(): Enabled");
     return true;
   }
   else {
-    LOG_PRINTLN("enableDischarging: failed");
+    LOG_PRINTLN("enableDischarging(): Failed");
 
     Serial.print("cellVoltages[idCellMinVoltage]: ");
     Serial.println(cellVoltages[idCellMinVoltage]);
