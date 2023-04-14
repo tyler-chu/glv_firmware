@@ -209,7 +209,6 @@ int bq769x0::checkStatus()
   // no fault/error
   if (((sys_stat.regByte == 0 || sys_stat.regByte == 128)) && (!TEMP_FAULT)){
     // Serial.println("[No Error Detected...]");
-    Serial.println("NO ERRORS");
     return 0;
   }
 
@@ -222,7 +221,7 @@ int bq769x0::checkStatus()
       updateCurrent(true);  // automatically clears CC ready flag	
     }
 
-    Serial.println("Made it past updateCurrent(): ...");
+    // Serial.println("Made it past updateCurrent(): ...");
     
     // Serious error occured
     if (sys_stat.regByte & B00111111 || (TEMP_FAULT))
@@ -291,10 +290,11 @@ int bq769x0::checkStatus()
         // temp error 
         if (TEMP_FAULT == true){
           writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
-
+          disableCharging();
+          disableDischarging();
           // if (secSinceErrorCounter % 3 == 0)
           delay(3000);
-          Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
+          // Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
           updateTemperatures2();
         }
 
@@ -767,13 +767,15 @@ float bq769x0::getTemperatureDegF(byte channel)
 
 //----------------------------------------------------------------------------
 
+// internal temp
 void bq769x0::updateTemperatures()
 {
   float tmp = 0;
   int adcVal = 0;
   int vtsx = 0;
   unsigned long rts = 0;
-  
+
+  // writeRegister(SYS_CTRL1, B0000000);
 
   // internal air temperature (TS1)
   Wire.beginTransmission(I2CAddress);
@@ -798,7 +800,7 @@ void bq769x0::updateTemperatures()
 
 }
 
-// internal chip temperature (TS2)
+// ambient chip temperature (TS2)
 // TODO: implement 
 void bq769x0::updateTemperatures2()
 {
@@ -808,9 +810,9 @@ void bq769x0::updateTemperatures2()
   unsigned long rts = 0;
 
   // clear TEMP_SEL bit
-  //writeRegister(SYS_CTRL1, B0001000);
-  
-  // internal die temperature (TS2)
+  writeRegister(SYS_CTRL1, B0001000); // ambient
+
+  // ambient temperature (TS2)
   Wire.beginTransmission(I2CAddress);
   Wire.write(TS2_HI_BYTE);
   Wire.endTransmission();
@@ -830,8 +832,8 @@ void bq769x0::updateTemperatures2()
     // update channel 2 temp (TS2)
     temperatures[1] = (tmp - 273.15) * 10.0;
 
-    Serial.print("updateTemperature2(): ");
-    Serial.println(temperatures[1]/10);
+    // Serial.print("updateTemperature2(): ");
+    // Serial.println(temperatures[1]/10);
 
 
     // check viable ambient temperature
@@ -845,14 +847,14 @@ void bq769x0::updateTemperatures2()
       TEMP_FAULT = false;
     }
     
-    Serial.print("minCellTempDischarge: ");
-    Serial.println(minCellTempDischarge);
+    // Serial.print("minCellTempDischarge: ");
+    // Serial.println(minCellTempDischarge);
 
-    Serial.print("maxCellTempCharge: ");
-    Serial.println(maxCellTempCharge);
+    // Serial.print("maxCellTempCharge: ");
+    // Serial.println(maxCellTempCharge);
 
-    Serial.print("Temp Fault Flag: ");
-    Serial.println(TEMP_FAULT);
+    // Serial.print("Temp Fault Flag: ");
+    // Serial.println(TEMP_FAULT);
 
   }
 

@@ -195,8 +195,8 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
-    if (BMS.FAULT_FLAG == true)
-        return;
+    // if (BMS.FAULT_FLAG == true)
+    //     return;
 
     regSYS_STAT_t system_status;
     system_status.regByte = BMS.readRegister(SYS_STAT);

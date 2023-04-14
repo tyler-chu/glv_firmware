@@ -129,12 +129,12 @@ void fault_detection(uint8_t regByte){
 
         // 1st iteration of fault being present 
         if (BMS.fault_counter == 1){
-            Serial.println("-----------------------");
             Serial.println("- BM IC State: [FAULT]");
             Serial.println("- LED Color: [RED]\n");
             Serial.print("SYS_STAT: ");
             Serial.println(regByte);
             fault_checker(regByte);
+            Serial.println("-----------------------");
         }
 
         BMS.FAULT_FLAG = true;  // do not collect data until fault is resolved 
@@ -192,6 +192,12 @@ void led_logging(){
 
     if (disp_counter == 0)
         disp_counter++; // 2nd iteration of a state (will not print out repetitive message)
+
+
+    // TODO:
+    if (led_state == HIGH && BMS.FAULT_FLAG){
+        spi_write();
+    }
 
 }
 
