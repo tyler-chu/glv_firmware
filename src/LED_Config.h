@@ -195,9 +195,9 @@ void led_logging(){
 
 
     // TODO:
-    if (led_state == HIGH && BMS.FAULT_FLAG){
-        spi_write();
-    }
+    // if (led_state == HIGH && BMS.FAULT_FLAG){
+    //     spi_write();
+    // }
 
 }
 
