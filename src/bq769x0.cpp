@@ -312,7 +312,7 @@ int bq769x0::checkStatus()
     }
 
     FAULT_FLAG = false;
-    TEMP_FAULT = false;
+    // TEMP_FAULT = false;
     writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
     
     return errorStatus;
@@ -547,10 +547,14 @@ void bq769x0::setTemperatureLimits(int minDischarge_degC, int maxDischarge_degC,
   int minCharge_degC, int maxCharge_degC)
 {
   // Temperature limits (°C/10)
-  minCellTempDischarge = minDischarge_degC * 10;
-  maxCellTempDischarge = maxDischarge_degC * 10;
-  minCellTempCharge = minCharge_degC * 10;
-  maxCellTempCharge = maxCharge_degC * 10;  
+  // minCellTempDischarge = minDischarge_degC * 10;
+  // maxCellTempDischarge = maxDischarge_degC * 10;
+  // minCellTempCharge = minCharge_degC * 10;
+  // maxCellTempCharge = maxCharge_degC * 10;  
+  minCellTempDischarge = minDischarge_degC;
+  maxCellTempDischarge = maxDischarge_degC;
+  minCellTempCharge = minCharge_degC;
+  maxCellTempCharge = maxCharge_degC;  
 }
 
 void bq769x0::setIdleCurrentThreshold(int current_mA)
@@ -739,6 +743,7 @@ int bq769x0::getCellVoltage(byte idCell)
 float bq769x0::getTemperatureDegC(byte channel)
 {
   if (channel >= 1 && channel <= 3) {
+    // return (float)temperatures[channel-1];
     return (float)temperatures[channel-1] / 10.0;
   }
   else
@@ -818,9 +823,12 @@ void bq769x0::updateTemperatures2()
     // update channel 2 temp (TS2)
     temperatures[1] = (tmp - 273.15) * 10.0;
 
+    Serial.print("updateTemperature2(): ");
+    Serial.println(temperatures[1]/10);
+
 
     // check viable ambient temperature
-    if (temperatures[1] <= minCellTempDischarge || temperatures[1] >= maxCellTempCharge){
+    if ((temperatures[1]/10) <= minCellTempDischarge || (temperatures[1]/10) >= maxCellTempCharge){
       FAULT_FLAG = true;
       TEMP_FAULT = true;
     }
@@ -829,6 +837,16 @@ void bq769x0::updateTemperatures2()
       FAULT_FLAG = false;
       TEMP_FAULT = false;
     }
+    
+    Serial.print("minCellTempDischarge: ");
+    Serial.println(minCellTempDischarge);
+
+    Serial.print("maxCellTempCharge: ");
+    Serial.println(maxCellTempCharge);
+
+    Serial.print("Temp Fault Flag: ");
+    Serial.println(TEMP_FAULT);
+
   }
 
   // set TEMP_SEL bit
