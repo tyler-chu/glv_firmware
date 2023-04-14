@@ -193,7 +193,7 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
-  Serial.println("checkStatus(): Running ...");
+  // Serial.println("checkStatus(): Running ...");
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
@@ -209,19 +209,23 @@ int bq769x0::checkStatus()
   // no fault/error
   if (((sys_stat.regByte == 0 || sys_stat.regByte == 128)) && (!TEMP_FAULT)){
     // Serial.println("[No Error Detected...]");
+    Serial.println("NO ERRORS");
     return 0;
   }
+
 
   // fault = detected
   else {
 
-    if (sys_stat.bits.CC_READY == 1) {
+    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT)) {
       //LOG_PRINTLN("Interrupt: CC ready");
       updateCurrent(true);  // automatically clears CC ready flag	
     }
+
+    Serial.println("Made it past updateCurrent(): ...");
     
     // Serious error occured
-    if (sys_stat.regByte & B00111111)
+    if (sys_stat.regByte & B00111111 || (TEMP_FAULT))
     {
       if (alertInterruptFlag == true) {
         secSinceErrorCounter = 0;
@@ -285,12 +289,13 @@ int bq769x0::checkStatus()
 
 
         // temp error 
-        if (TEMP_FAULT){
+        if (TEMP_FAULT == true){
           writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
 
-          if (secSinceErrorCounter % 3 == 0)
-            Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
-            updateTemperatures2();
+          // if (secSinceErrorCounter % 3 == 0)
+          delay(3000);
+          Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
+          updateTemperatures2();
         }
 
 
