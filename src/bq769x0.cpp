@@ -193,6 +193,7 @@ void bq769x0::xready_handling(){
 
 int bq769x0::checkStatus()
 {
+  Serial.println("checkStatus(): Running ...");
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
@@ -288,6 +289,7 @@ int bq769x0::checkStatus()
           writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
 
           if (secSinceErrorCounter % 3 == 0)
+            Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
             updateTemperatures2();
         }
 

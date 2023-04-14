@@ -91,8 +91,8 @@ void bms_set_protection(){
     BMS.updateVoltages();
 
     BMS.setThermistorBetaValue(3977);
-    // BMS.setTemperatureLimits(-35, 55, 0, 55);
-    BMS.setTemperatureLimits(-35, 80, 0, 80);
+    BMS.setTemperatureLimits(-35, 55, 0, 55);
+    // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
     BMS.setShortCircuitProtection(14000, 200);
 
@@ -195,7 +195,7 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
-    if (BMS.FAULT_FLAG == true || BMS.TEMP_FAULT == true)
+    if (BMS.FAULT_FLAG == true)
         return;
 
     regSYS_STAT_t system_status;
