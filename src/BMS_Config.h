@@ -99,8 +99,15 @@ void bms_set_protection(){
     BMS.setOvercurrentChargeProtection(8000, 200);
     // BMS.setOvercurrentDischargeProtection(8000, 320);
 
+<<<<<<< Updated upstream
+
+>>>>>>> Stashed changes
+
     BMS.setCellUndervoltageProtection(0, 2);
     BMS.setCellOvervoltageProtection(5000, 2);
+    // BMS.setCellUndervoltageProtection(2700, 2);
+    // BMS.setCellOvervoltageProtection(4000, 2);
+    BMS.setCellOvervoltageProtection(0, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);

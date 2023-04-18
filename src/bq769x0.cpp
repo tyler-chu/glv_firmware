@@ -840,15 +840,16 @@ void bq769x0::updateTemperatures2()
 
 
     // check viable ambient temperature
-    if ((temperatures[1]/10) <= minCellTempDischarge || (temperatures[1]/10) >= maxCellTempCharge){
-      FAULT_FLAG = true;
-      TEMP_FAULT = true;
-    }
+    // TODO: UNCOMMENT 842-851
+    // if ((temperatures[1]/10) <= minCellTempDischarge || (temperatures[1]/10) >= maxCellTempCharge){
+    //   FAULT_FLAG = true;
+    //   TEMP_FAULT = true;
+    // }
 
-    else{
-      FAULT_FLAG = false;
-      TEMP_FAULT = false;
-    }
+    // else{
+    //   FAULT_FLAG = false;
+    //   TEMP_FAULT = false;
+    // }
     
     // Serial.print("minCellTempDischarge: ");
     // Serial.println(minCellTempDischarge);
