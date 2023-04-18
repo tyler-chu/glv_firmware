@@ -215,10 +215,11 @@ void bq769x0::shutdown()
 bool bq769x0::enableCharging()
 {
   LOG_PRINTLN("enableCharging");
-  if (checkStatus() == 0 &&
-    cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
-    temperatures[0] < maxCellTempCharge &&
-    temperatures[0] > minCellTempCharge)
+  // if (checkStatus() == 0 &&
+  //   cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
+  //   temperatures[0] < maxCellTempCharge &&
+  //   temperatures[0] > minCellTempCharge)
+  if (checkStatus() == 0)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -270,10 +271,11 @@ bool bq769x0::enableCharging()
 bool bq769x0::enableDischarging()
 {
   LOG_PRINTLN("enableDischarging()");
-  if (checkStatus() == 0 &&
-    cellVoltages[idCellMinVoltage] > minCellVoltage &&
-    temperatures[0] < maxCellTempDischarge &&
-    temperatures[0] > minCellTempDischarge)
+  // if (checkStatus() == 0 &&
+  //   cellVoltages[idCellMinVoltage] > minCellVoltage &&
+  //   temperatures[0] < maxCellTempDischarge &&
+  //   temperatures[0] > minCellTempDischarge)
+  if (checkStatus() == 0)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -379,8 +381,8 @@ int bq769x0::checkStatus()
         if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
           updateVoltages();
           if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
-            
-            // LOG_PRINTLN(F("- Clearing UV Error ..."));
+            Serial.println("UV Error detected");
+            LOG_PRINTLN(F("- Clearing UV Error ..."));
             writeRegister(SYS_STAT, B00001000);
           }
         }
