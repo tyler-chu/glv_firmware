@@ -8,6 +8,7 @@
 #include <SD_Config.h>
 #include <BMS_Config.h>
 #include <bq769x0.h>
+#include <string>
 
 #define LED_RED 11
 #define LED_GREEN 13
@@ -32,6 +33,8 @@ ezButton button(MOMENTARY_SWITCH);
 volatile int led_state = LOW;   // LOW = logging (off), HIGH = logging (on)
 volatile int disp_counter = 0;  // used to indicate 1st iteration of a state (terminal output preferences)
 // int fault_counter = 0;
+
+std::string fault_name = "";
 
 
 // led_setup(): configures required pins as OUTPUT
@@ -78,33 +81,35 @@ void fault_checker(uint8_t regByte){
     switch(regByte) {
         case XREADY1:
             Serial.println("- XR Error [y]");
+            fault_name = "XR Error";
             break;
         case XREADY2:
             Serial.println("- XR Error [y]");
+            fault_name = "XR Error";
             break;
         case UV1:
             Serial.println("- UV Error [y]");
+            fault_name = "UV Error";
             break;
         case UV2:
             Serial.println("- UV Error [y]");
+            fault_name = "UV Error";
             break;
         case OV1:
             Serial.println("- OV Error [y]");
+            fault_name = "OV Error";
             break;
         case OV2:
             Serial.println("- OV Error [y]");
+            fault_name = "OV Error";
             break;
         case SCD1:
             Serial.println("- SCD Error [y]");
+            fault_name = "SCD Error";
             break;
         case SCD2:
             Serial.println("- SCD Error [y]");
-            break;
-        case UTEMP:
-            Serial.println("- UTEMP Error [y]");
-            break;
-        case OTEMP:
-            Serial.println("- OTEMP Error [y]");
+            fault_name = "SCD Error";
             break;
         // case OCD1:
         //     Serial.println("- OCD Error [y]");
@@ -116,6 +121,7 @@ void fault_checker(uint8_t regByte){
     
     if (BMS.TEMP_FAULT){
         Serial.println("- Temperature Error [y]");
+        fault_name = "Temp Error";
     }
 }
 
