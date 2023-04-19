@@ -219,7 +219,12 @@ bool bq769x0::enableCharging()
   //   cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
   //   temperatures[0] < maxCellTempCharge &&
   //   temperatures[0] > minCellTempCharge)
-  if (checkStatus() == 0)
+
+  Serial.print("CHECKSTATUS: ");
+  Serial.println(checkStatus());
+  delay(2000);
+
+  if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -275,7 +280,7 @@ bool bq769x0::enableDischarging()
   //   cellVoltages[idCellMinVoltage] > minCellVoltage &&
   //   temperatures[0] < maxCellTempDischarge &&
   //   temperatures[0] > minCellTempDischarge)
-  if (checkStatus() == 0)
+  if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -313,6 +318,7 @@ bool bq769x0::enableDischarging()
 int bq769x0::checkStatus()
 {
   // Serial.println("checkStatus(): Running ...");
+  writeRegister(SYS_STAT, B0001000);  // clear alert 
   byte sys_ctrl2;
   sys_ctrl2 = readRegister(SYS_CTRL2);
   
@@ -326,7 +332,8 @@ int bq769x0::checkStatus()
   sys_stat.regByte = readRegister(SYS_STAT);
 
   // no fault/error
-  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128)) && (!TEMP_FAULT)){
+  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT)){
+    writeRegister(SYS_CTRL2, B00000011);  // closes fets
     // Serial.println("[No Error Detected...]");
     return 0;
   }
@@ -334,6 +341,7 @@ int bq769x0::checkStatus()
 
   // fault = detected
   else {
+    // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
 
     if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT)) {
       //LOG_PRINTLN("Interrupt: CC ready");
@@ -408,7 +416,8 @@ int bq769x0::checkStatus()
 
         // temp error 
         if (TEMP_FAULT == true){
-          writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
+          writeRegister(SYS_CTRL2, B00000000);  // opens fets
+          Serial.println("INSIDE TEMPERATURE ERROR...");
           // TODO: disabled charging/discharging
           // disableCharging();
           // disableDischarging();
@@ -420,6 +429,9 @@ int bq769x0::checkStatus()
 
 
         // TODO: temperature fault handling 
+
+        // if (TEMP_FAULT == false)
+        //   writeRegister(SYS_CTRL2, B00000011);  // opens fets
 
 
         // not mandatory
@@ -440,7 +452,7 @@ int bq769x0::checkStatus()
 
     FAULT_FLAG = false;
     // TEMP_FAULT = false;
-    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+    // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
     
     return errorStatus;
 
@@ -841,15 +853,15 @@ void bq769x0::updateTemperatures2()
 
     // check viable ambient temperature
     // TODO: UNCOMMENT 842-851
-    // if ((temperatures[1]/10) <= minCellTempDischarge || (temperatures[1]/10) >= maxCellTempCharge){
-    //   FAULT_FLAG = true;
-    //   TEMP_FAULT = true;
-    // }
+    if ((temperatures[1]) <= minCellTempDischarge || (temperatures[1]) >= maxCellTempCharge){
+      FAULT_FLAG = true;
+      TEMP_FAULT = true;
+    }
 
-    // else{
-    //   FAULT_FLAG = false;
-    //   TEMP_FAULT = false;
-    // }
+    else{
+      FAULT_FLAG = false;
+      TEMP_FAULT = false;
+    }
     
     // Serial.print("minCellTempDischarge: ");
     // Serial.println(minCellTempDischarge);
@@ -1082,6 +1094,7 @@ void bq769x0::setAlertInterruptFlag()
 {
   interruptTimestamp = millis();
   alertInterruptFlag = true;
+  // alertInterruptFlag = false;
 }
 
 //----------------------------------------------------------------------------
