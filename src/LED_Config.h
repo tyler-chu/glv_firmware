@@ -125,6 +125,9 @@ void fault_detection(uint8_t regByte){
     // check if a fault is present 
     if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || (BMS.TEMP_FAULT == true)){
 
+        // if fault, always log
+        led_state = 1;
+
         led_fault();    // turn LED red 
 
         // 1st iteration of fault being present 
@@ -151,19 +154,20 @@ void led_logging(){
 
     // fault detection
     fault_detection(fault_reg.regByte);
-    if (BMS.FAULT_FLAG)
-        return;
+    // if (BMS.FAULT_FLAG)
+    //     return;
 
     // momentary switch (HIGH) --> logging state
     if (led_state == HIGH && disp_counter == 1){
-        Serial.println("- BM IC State: [LOGGING]");
-        Serial.println("- LED Color: [Green]");
-        Serial.println("-----------------------");
+        if (!BMS.FAULT_FLAG){
+            Serial.println("- BM IC State: [LOGGING]");
+            Serial.println("- LED Color: [Green]");
+            Serial.println("-----------------------");
 
-        // Logging State: Green 
-        analogWrite(LED_RED, 0);
-        analogWrite(LED_GREEN, 255);
-        analogWrite(LED_BLUE, 0);
+            analogWrite(LED_RED, 0);
+            analogWrite(LED_GREEN, 255);
+            analogWrite(LED_BLUE, 0);
+        }
 
         // get starting log time 
         set_log_start();
@@ -177,9 +181,11 @@ void led_logging(){
     else if (led_state == HIGH && disp_counter > 1){
 
         // Logging State: Green LED
-        analogWrite(LED_RED, 0);
-        analogWrite(LED_GREEN, 255);
-        analogWrite(LED_BLUE, 0);
+        if (!BMS.FAULT_FLAG){
+            analogWrite(LED_RED, 0);
+            analogWrite(LED_GREEN, 255);
+            analogWrite(LED_BLUE, 0);
+        }      
 
         // write to .csv file, send to micro-sd card
         delay(1000);
@@ -204,7 +210,7 @@ void led_logging(){
 
 // ISR: momentary switch --> toggle led_state
 void IRAM_ATTR toggle_logging(){
-    if (!(BMS.FAULT_FLAG))
+    // if (!(BMS.FAULT_FLAG))
         led_state = !led_state;
         counter = 0;        // reset: new file 
         disp_counter = 0;
