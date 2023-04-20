@@ -177,7 +177,7 @@ void led_logging(){
 
         // get starting log time 
         set_log_start();
-        spi_write(temp_ts1, temp_ts2, current, voltage);
+        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
 
         // used to indicate 1st iteration of a state (terminal output preferences)
         disp_counter += 1;
@@ -195,7 +195,7 @@ void led_logging(){
 
         // write to .csv file, send to micro-sd card
         delay(1000);
-        spi_write(temp_ts1, temp_ts2, current, voltage);
+        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
     }
 
     // momentary switch (LOW) --> idle state
@@ -216,7 +216,7 @@ void led_logging(){
 
 // ISR: momentary switch --> toggle led_state
 void IRAM_ATTR toggle_logging(){
-    // if (!(BMS.FAULT_FLAG))
+    if (!(BMS.FAULT_FLAG))
         led_state = !led_state;
         counter = 0;        // reset: new file 
         disp_counter = 0;
