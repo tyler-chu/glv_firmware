@@ -12,8 +12,8 @@
 #define I2C_SCL 9
 #define ALERT_PIN 17
 
-const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
-// const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
+// const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
+const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
 float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
