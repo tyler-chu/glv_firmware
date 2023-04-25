@@ -23,8 +23,8 @@ void setup()
   // switch_setup();
   bms_setup();
   clear_sys_stat();
-  spi_setup();
-  check_logs();
+  // spi_setup();
+  // check_logs();
   // lcd_setup();
 }
 
@@ -34,4 +34,3 @@ void loop()
   BMS.checkStatus();
   led_logging();
 }
-

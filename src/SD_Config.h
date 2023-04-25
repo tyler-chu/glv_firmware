@@ -16,7 +16,7 @@
 
 SPIClass spi = SPIClass(HSPI);
 int counter = 0;  // 0: write column headers for .csv, 1: write data values
-int file_counter = 1; // # = log#.csv (naming convention)
+int file_counter = 0; // # = log#.csv (naming convention)
 char name_buffer[50];
 std::chrono::time_point<std::chrono::system_clock> start_time; // get the start timestamp
 bool file_exists = false;
@@ -137,9 +137,12 @@ void check_logs(){
 
     else{
       log_flag = true;
+      Serial.println("-----------------------------");
       Serial.println("- Dynamic Log Creation [y]");
-      Serial.print("Log Starting @: ");
+      Serial.print("- Log Starting @: ");
       Serial.println(file_counter);
+      Serial.println("-----------------------------");
+
     }
   }
 
@@ -170,7 +173,7 @@ void set_log_start(){
 }
 
 // spi_write: write data to a .csv file, save file to micro-sd card
-void spi_write(float temp_ts1, float temp_ts2, float current, float voltage, float bat_percentage){
+void spi_write(float temp_ts1, float temp_ts2, float current, float voltage, float bat_percentage, const char * fault_name){
 
   char buffer[50];
 
@@ -199,7 +202,7 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage, flo
     sprintf(formatted_seconds, "%d", seconds);
   
   if (BMS.FAULT_FLAG) {
-    sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f,FAULT HERE,y\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage);
+    sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f,%s,y\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
   }
   else if (!BMS.FAULT_FLAG) {
     sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f,-,n\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage);
