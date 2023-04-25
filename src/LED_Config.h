@@ -34,9 +34,6 @@ volatile int led_state = LOW;   // LOW = logging (off), HIGH = logging (on)
 volatile int disp_counter = 0;  // used to indicate 1st iteration of a state (terminal output preferences)
 // int fault_counter = 0;
 
-std::string fault_name = "";
-
-
 // led_setup(): configures required pins as OUTPUT
 void led_setup(){
     Serial.println("led_setup(): Running...");
@@ -81,35 +78,35 @@ void fault_checker(uint8_t regByte){
     switch(regByte) {
         case XREADY1:
             Serial.println("- XR Error [y]");
-            fault_name = "XR Error";
+            // strcpy(fault_name[0], "XR Error");
             break;
         case XREADY2:
             Serial.println("- XR Error [y]");
-            fault_name = "XR Error";
+            // fault_name = "XR Error";
             break;
         case UV1:
             Serial.println("- UV Error [y]");
-            fault_name = "UV Error";
+            // fault_name = "UV Error";
             break;
         case UV2:
             Serial.println("- UV Error [y]");
-            fault_name = "UV Error";
+            // fault_name = "UV Error";
             break;
         case OV1:
             Serial.println("- OV Error [y]");
-            fault_name = "OV Error";
+            // fault_name = "OV Error";
             break;
         case OV2:
             Serial.println("- OV Error [y]");
-            fault_name = "OV Error";
+            // fault_name = "OV Error";
             break;
         case SCD1:
             Serial.println("- SCD Error [y]");
-            fault_name = "SCD Error";
+            // fault_name = "SCD Error";
             break;
         case SCD2:
             Serial.println("- SCD Error [y]");
-            fault_name = "SCD Error";
+            // fault_name = "SCD Error";
             break;
         // case OCD1:
         //     Serial.println("- OCD Error [y]");
@@ -121,7 +118,7 @@ void fault_checker(uint8_t regByte){
     
     if (BMS.TEMP_FAULT){
         Serial.println("- Temperature Error [y]");
-        fault_name = "Temp Error";
+        // fault_name = "Temp Error";
     }
 }
 
@@ -177,7 +174,7 @@ void led_logging(){
 
         // get starting log time 
         set_log_start();
-        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
+        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage);
 
         // used to indicate 1st iteration of a state (terminal output preferences)
         disp_counter += 1;
@@ -195,7 +192,7 @@ void led_logging(){
 
         // write to .csv file, send to micro-sd card
         delay(1000);
-        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
+        spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage);
     }
 
     // momentary switch (LOW) --> idle state
