@@ -16,9 +16,10 @@
 
 SPIClass spi = SPIClass(HSPI);
 int counter = 0;  // 0: write column headers for .csv, 1: write data values
-int file_counter = 0; // # = log#.csv (naming convention)
+int file_counter = 1; // # = log#.csv (naming convention)
 char name_buffer[50];
 std::chrono::time_point<std::chrono::system_clock> start_time; // get the start timestamp
+bool file_exists = false;
 
 // listDir(), traverses through and lists all directories
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -69,13 +70,17 @@ void readFile(fs::FS &fs, const char * path){
   File file = fs.open(path);
   if(!file){
     Serial.println("Failed to open file for reading");
+    file_exists = false;
     return;
   }
 
-  Serial.print("Read from file: ");
-  while(file.available()){
-    Serial.write(file.read());
-  }
+  Serial.print("Read from file: \n");
+  delay(1000);
+  // while(file.available()){
+  //   // Serial.write(file.read());
+  //   file_exists = true;
+  // }
+  file_exists = true;
   file.close();
 }
 
@@ -111,6 +116,33 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     Serial.println("Append failed");
   }
   file.close();
+}
+
+// check_logs(): determines which log# will be created next, prevents logs from being overwritten
+void check_logs(){
+  char log_buffer[10];  // ex: log999.csv
+  bool log_flag = false;
+
+  Serial.println("check_logs(): Running...");
+
+  // check existing logs on micro-sd card 
+  while (!log_flag){
+    sprintf(log_buffer, "/log%d.csv", file_counter);
+
+    // if file already exists, then increment counter
+    readFile(SD, log_buffer);
+    if (file_exists){
+      file_counter++;
+    }
+
+    else{
+      log_flag = true;
+      Serial.println("- Dynamic Log Creation [y]");
+      Serial.print("Log Starting @: ");
+      Serial.println(file_counter);
+    }
+  }
+
 }
 
 // spi_setup(): configure SPI for SD card 
