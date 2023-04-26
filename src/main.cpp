@@ -18,7 +18,7 @@ void setup()
   delay(3000);
   i2c_setup();
   // i2c_scanner();
-  // led_setup();
+  led_setup();
   boot_bms();
   // switch_setup();
   bms_setup();
