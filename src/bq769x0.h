@@ -48,9 +48,13 @@ class bq769x0 {
 
     bool FAULT_FLAG = false;
     bool TEMP_FAULT = false;
+    bool OV_FLAG = false;
+    bool UV_FLAG = false;
+
     int fault_counter = 0;
     void xready_handling();
-
+    float get_percentage();
+    
     void writeRegister(byte address, int data);
     int readRegister(byte address);
     bool determineAddressAndCrc(void);
@@ -123,7 +127,7 @@ class bq769x0 {
     // indicates if a new current reading or an error is available from BMS IC
 	bool alertInterruptFlag = true;   // init with true to check and clear errors at start-up   
 	
-    int numberOfCells;
+    int numberOfCells = 6;
 	int cellVoltages[MAX_NUMBER_OF_CELLS];          // mV
     byte idCellMaxVoltage;
     byte idCellMinVoltage;

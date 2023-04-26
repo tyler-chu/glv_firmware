@@ -120,7 +120,16 @@ void fault_checker(uint8_t regByte){
     if (BMS.TEMP_FAULT){
         Serial.println("- Temperature Error [y]");
         strcpy(fault_name, "Temp Error");
-        // fault_name = "Temp Error";
+    }
+
+    if (BMS.OV_FLAG){
+        Serial.println("- OV Error [y]");
+        strcpy(fault_name, "OV Error");
+    }
+
+    if (BMS.UV_FLAG){
+        Serial.println("- UV Error [y]");
+        strcpy(fault_name, "UV Error");
     }
 }
 
@@ -128,7 +137,7 @@ void fault_checker(uint8_t regByte){
 void fault_detection(uint8_t regByte){
     
     // check if a fault is present 
-    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || (BMS.TEMP_FAULT == true)){
+    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || (BMS.TEMP_FAULT == true) || (BMS.OV_FLAG == true) || (BMS.UV_FLAG == true)){
 
         // if fault, always log
         led_state = 1;
