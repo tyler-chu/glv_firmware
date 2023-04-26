@@ -143,6 +143,8 @@ void check_logs(){
       Serial.println(file_counter);
       Serial.println("-----------------------------");
 
+      file_counter--;
+
     }
   }
 
