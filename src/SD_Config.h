@@ -19,6 +19,7 @@ int counter = 0;  // 0: write column headers for .csv, 1: write data values
 int file_counter = 0; // # = log#.csv (naming convention)
 char name_buffer[50];
 std::chrono::time_point<std::chrono::system_clock> start_time; // get the start timestamp
+bool file_exists = false;
 
 // listDir(), traverses through and lists all directories
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -69,13 +70,17 @@ void readFile(fs::FS &fs, const char * path){
   File file = fs.open(path);
   if(!file){
     Serial.println("Failed to open file for reading");
+    file_exists = false;
     return;
   }
 
-  Serial.print("Read from file: ");
-  while(file.available()){
-    Serial.write(file.read());
-  }
+  Serial.print("Read from file: \n");
+  delay(1000);
+  // while(file.available()){
+  //   // Serial.write(file.read());
+  //   file_exists = true;
+  // }
+  file_exists = true;
   file.close();
 }
 
@@ -113,6 +118,36 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
   file.close();
 }
 
+// check_logs(): determines which log# will be created next, prevents logs from being overwritten
+void check_logs(){
+  char log_buffer[10];  // ex: log999.csv
+  bool log_flag = false;
+
+  Serial.println("check_logs(): Running...");
+
+  // check existing logs on micro-sd card 
+  while (!log_flag){
+    sprintf(log_buffer, "/log%d.csv", file_counter);
+
+    // if file already exists, then increment counter
+    readFile(SD, log_buffer);
+    if (file_exists){
+      file_counter++;
+    }
+
+    else{
+      log_flag = true;
+      Serial.println("-----------------------------");
+      Serial.println("- Dynamic Log Creation [y]");
+      Serial.print("- Log Starting @: ");
+      Serial.println(file_counter);
+      Serial.println("-----------------------------");
+
+    }
+  }
+
+}
+
 // spi_setup(): configure SPI for SD card 
 void spi_setup(){
     delay(1000);
@@ -138,9 +173,11 @@ void set_log_start(){
 }
 
 // spi_write: write data to a .csv file, save file to micro-sd card
-void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
+void spi_write(float temp_ts1, float temp_ts2, float current, float voltage, float bat_percentage, const char * fault_name){
 
   char buffer[50];
+
+  char fault_buffer[50];
 
   // creates timestamp in seconds 
   auto current_time = std::chrono::high_resolution_clock::now();
@@ -164,16 +201,34 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage){
   else
     sprintf(formatted_seconds, "%d", seconds);
   
-  sprintf(buffer, "%s:%s,%f,%f,%f,%f,0\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage);
+  if (BMS.FAULT_FLAG) {
+    sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f,%s,y\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name);
+  }
+  else if (!BMS.FAULT_FLAG) {
+    sprintf(buffer, "%s:%s,%f,%f,%f,%f,%f,-,n\n", formatted_minutes, formatted_seconds, temp_ts1, temp_ts2, current, voltage, bat_percentage);
+  }
 
   // 1st iteration, creates .csv file w/ column headers
   if (counter == 0){
     Serial.println("spi_write(): Running");
     file_counter += 1;  // used for dynamic naming of log files 
     sprintf(name_buffer, "/log%d.csv", file_counter);
-    writeFile(SD, name_buffer, "Time(min:sec), TS1, TS2, I_o,V_bat,Bat%\n");
+    writeFile(SD, name_buffer, "Time(min:sec), TS1, TS2, I_o, V_bat, Bat%, Fault, [y/n]\n");
     counter += 1;
+
+    // // if fault causes logging
+    // if (BMS.FAULT_FLAG){
+    //   sprintf(fault_buffer, "Fault, Detected, %s\n", fault_name);
+    //   appendFile(SD, name_buffer, fault_buffer);
+    //   return;
+    // }
   }
+
+  // // fault occurs during logging (1st iteration)
+  // if (BMS.FAULT_FLAG && BMS.fault_counter == 1){
+  //   sprintf(fault_buffer, "Fault, Detected, %s\n", fault_name);
+  //   appendFile(SD, name_buffer, fault_buffer);
+  // }
   
   // post 1st iteration, append to existing .csv file
   appendFile(SD, name_buffer, buffer);

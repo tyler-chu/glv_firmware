@@ -188,183 +188,6 @@ void bq769x0::xready_handling(){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// joey
-
-
-//----------------------------------------------------------------------------
-// Fast function to check whether BMS has an error
-// (returns 0 if everything is OK)
-
-int bq769x0::checkStatus()
-{
-  byte sys_ctrl2;
-  sys_ctrl2 = readRegister(SYS_CTRL2);
-  
-  // fault = NONE
-  // if (alertInterruptFlag == false && errorStatus == 0){
-  //   Serial.println("[No Error Detected...]");
-  //   return 0;
-  // }
-
-  regSYS_STAT_t sys_stat;
-  sys_stat.regByte = readRegister(SYS_STAT);
-
-  // no fault/error
-  if (sys_stat.regByte == 0 || sys_stat.regByte == 128){
-    // Serial.println("[No Error Detected...]");
-    return 0;
-  }
-
-  // fault = detected
-  else {
-
-    if (sys_stat.bits.CC_READY == 1) {
-      //LOG_PRINTLN("Interrupt: CC ready");
-      updateCurrent(true);  // automatically clears CC ready flag	
-    }
-    
-    // Serious error occured
-    if (sys_stat.regByte & B00111111)
-    {
-      if (alertInterruptFlag == true) {
-        secSinceErrorCounter = 0;
-      }
-      errorStatus = sys_stat.regByte;
-      
-      int secSinceInterrupt = (millis() - interruptTimestamp) / 1000;
-      
-    //   check for overrun of millis() or very slow running program
-      int tempSec = secSinceInterrupt - secSinceErrorCounter;
-      if (abs(tempSec) > 2) {
-        secSinceErrorCounter = secSinceInterrupt;
-      }
-      
-      // called only once per second
-      if (secSinceInterrupt >= secSinceErrorCounter)
-      {
-        if (sys_stat.regByte & B00010000) { // Alert error
-          if (secSinceErrorCounter % 10 == 0) {
-
-            // LOG_PRINTLN(F("Clearing Alert Error ..."));
-            writeRegister(SYS_STAT, B00010000);
-          }
-        }
-
-        if (sys_stat.regByte == 32 || sys_stat.regByte == 160) { // XR error
-          if (secSinceErrorCounter % 3 == 0){
-
-            // LOG_PRINTLN(F("- Clearing XR Error ..."));
-            writeRegister(SYS_STAT, B00100000);
-            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
-          }
-        }
-
-        if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
-          updateVoltages();
-          if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
-            
-            // LOG_PRINTLN(F("- Clearing UV Error ..."));
-            writeRegister(SYS_STAT, B00001000);
-          }
-        }
-
-        if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
-          updateVoltages();
-          if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
-
-            // LOG_PRINTLN(F("- Clearing OV Error ..."));
-            writeRegister(SYS_STAT, B00000100); // clears fault
-            // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
-          }
-        }
-
-        if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
-          if (secSinceErrorCounter % 60 == 0) {
-            
-            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
-            writeRegister(SYS_STAT, B00000010);
-          }
-        }
-
-
-        // TODO: temperature fault handling 
-
-
-        // not mandatory
-        if (sys_stat.regByte & B00000001) { // OCD
-          if (secSinceErrorCounter % 60 == 0) {
-
-            LOG_PRINTLN(F("Clearing OCD error"));
-            writeRegister(SYS_STAT, B00000001);
-          }
-        }
-        
-        secSinceErrorCounter++;
-      }
-    }
-    else {
-      errorStatus = 0;
-    }
-
-    FAULT_FLAG = false;
-    
-    return errorStatus;
-
-  }
-
-}
-
 //----------------------------------------------------------------------------
 // should be called at least once every 250 ms to get correct coulomb counting
 
@@ -392,10 +215,16 @@ void bq769x0::shutdown()
 bool bq769x0::enableCharging()
 {
   LOG_PRINTLN("enableCharging");
-  if (checkStatus() == 0 &&
-    cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
-    temperatures[0] < maxCellTempCharge &&
-    temperatures[0] > minCellTempCharge)
+  // if (checkStatus() == 0 &&
+  //   cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
+  //   temperatures[0] < maxCellTempCharge &&
+  //   temperatures[0] > minCellTempCharge)
+
+  Serial.print("CHECKSTATUS: ");
+  Serial.println(checkStatus());
+  delay(2000);
+
+  if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -447,10 +276,11 @@ bool bq769x0::enableCharging()
 bool bq769x0::enableDischarging()
 {
   LOG_PRINTLN("enableDischarging()");
-  if (checkStatus() == 0 &&
-    cellVoltages[idCellMinVoltage] > minCellVoltage &&
-    temperatures[0] < maxCellTempDischarge &&
-    temperatures[0] > minCellTempDischarge)
+  // if (checkStatus() == 0 &&
+  //   cellVoltages[idCellMinVoltage] > minCellVoltage &&
+  //   temperatures[0] < maxCellTempDischarge &&
+  //   temperatures[0] > minCellTempDischarge)
+  if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
@@ -481,6 +311,180 @@ bool bq769x0::enableDischarging()
   }
 }
 
+float bq769x0::get_percentage()
+{
+  float updated_voltage = batVoltage / 1000.00f;
+  float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  return bat_percentage;
+}
+
+//----------------------------------------------------------------------------
+// Fast function to check whether BMS has an error
+// (returns 0 if everything is OK)
+
+int bq769x0::checkStatus()
+{
+  // Serial.println("checkStatus(): Running ...");
+  writeRegister(SYS_STAT, B0001000);  // clear alert 
+  byte sys_ctrl2;
+  sys_ctrl2 = readRegister(SYS_CTRL2);
+  
+  // fault = NONE
+  // if (alertInterruptFlag == false && errorStatus == 0){
+  //   Serial.println("[No Error Detected...]");
+  //   return 0;
+  // }
+
+  regSYS_STAT_t sys_stat;
+  sys_stat.regByte = readRegister(SYS_STAT);
+
+  // no fault/error
+  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)){
+    writeRegister(SYS_CTRL2, B00000011);  // closes fets
+    // Serial.println("[No Error Detected...]");
+    return 0;
+  }
+
+
+  // fault = detected
+  else {
+    // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
+    writeRegister(SYS_CTRL2, B00000000);  // opens fets
+
+    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)) {
+      //LOG_PRINTLN("Interrupt: CC ready");
+      updateCurrent(true);  // automatically clears CC ready flag	
+    }
+
+    // Serial.println("Made it past updateCurrent(): ...");
+    
+    // Serious error occured
+    if (sys_stat.regByte & B00111111 || (TEMP_FAULT) || (OV_FLAG) || (UV_FLAG))
+    {
+      if (alertInterruptFlag == true) {
+        secSinceErrorCounter = 0;
+      }
+      errorStatus = sys_stat.regByte;
+      
+      int secSinceInterrupt = (millis() - interruptTimestamp) / 1000;
+      
+    //   check for overrun of millis() or very slow running program
+      int tempSec = secSinceInterrupt - secSinceErrorCounter;
+      if (abs(tempSec) > 2) {
+        secSinceErrorCounter = secSinceInterrupt;
+      }
+      
+      // called only once per second
+      if (secSinceInterrupt >= secSinceErrorCounter)
+      {
+        if (sys_stat.regByte & B00010000) { // Alert error
+          if (secSinceErrorCounter % 10 == 0) {
+
+            // LOG_PRINTLN(F("Clearing Alert Error ..."));
+            writeRegister(SYS_STAT, B00010000);
+          }
+        }
+
+        if (sys_stat.regByte == 32 || sys_stat.regByte == 160) { // XR error
+          if (secSinceErrorCounter % 3 == 0){
+
+            // LOG_PRINTLN(F("- Clearing XR Error ..."));
+            writeRegister(SYS_STAT, B00100000);
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+          }
+        }
+
+        if (OV_FLAG){
+          float bat_percentage = get_percentage();
+          // get updated battery percentage
+          if (bat_percentage > 100){
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+            OV_FLAG = false;
+          }
+        }
+
+        if (UV_FLAG){
+          float bat_percentage = get_percentage();
+          // get updated battery percentage
+          if (bat_percentage < 0){
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+            UV_FLAG = false;
+          }
+        }
+
+        // if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
+        //   updateVoltages();
+        //   if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
+        //     Serial.println("UV Error detected");
+        //     LOG_PRINTLN(F("- Clearing UV Error ..."));
+        //     writeRegister(SYS_STAT, B00001000);
+        //   }
+        // }
+
+        // if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
+        //   updateVoltages();
+        //   if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
+
+        //     // LOG_PRINTLN(F("- Clearing OV Error ..."));
+        //     writeRegister(SYS_STAT, B00000100); // clears fault
+        //     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+        //   }
+        // }
+
+        if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
+          if (secSinceErrorCounter % 60 == 0) {
+            
+            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
+            writeRegister(SYS_STAT, B00000010);
+          }
+        }
+
+
+        // temp error 
+        if (TEMP_FAULT == true){
+          writeRegister(SYS_CTRL2, B00000000);  // opens fets
+          Serial.println("INSIDE TEMPERATURE ERROR...");
+          // TODO: disabled charging/discharging
+          // disableCharging();
+          // disableDischarging();
+          // if (secSinceErrorCounter % 3 == 0)
+          // delay(3000);
+          // Serial.println("Running updateTemperatures2(): from CHECKSTATUS()");
+          updateTemperatures2();
+        }
+
+
+        // TODO: temperature fault handling 
+
+        // if (TEMP_FAULT == false)
+        //   writeRegister(SYS_CTRL2, B00000011);  // opens fets
+
+
+        // not mandatory
+        if (sys_stat.regByte & B00000001) { // OCD
+          if (secSinceErrorCounter % 60 == 0) {
+
+            // LOG_PRINTLN(F("Clearing OCD error"));
+            writeRegister(SYS_STAT, B00000001);
+          }
+        }
+        
+        secSinceErrorCounter++;
+      }
+    }
+    else {
+      errorStatus = 0;
+    }
+
+    FAULT_FLAG = false;
+    // TEMP_FAULT = false;
+    // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+    
+    return errorStatus;
+
+  }
+
+}
 //----------------------------------------------------------------------------
 
 void bq769x0::enableAutoBalancing(void)
@@ -591,10 +595,14 @@ void bq769x0::setTemperatureLimits(int minDischarge_degC, int maxDischarge_degC,
   int minCharge_degC, int maxCharge_degC)
 {
   // Temperature limits (°C/10)
-  minCellTempDischarge = minDischarge_degC * 10;
-  maxCellTempDischarge = maxDischarge_degC * 10;
-  minCellTempCharge = minCharge_degC * 10;
-  maxCellTempCharge = maxCharge_degC * 10;  
+  // minCellTempDischarge = minDischarge_degC * 10;
+  // maxCellTempDischarge = maxDischarge_degC * 10;
+  // minCellTempCharge = minCharge_degC * 10;
+  // maxCellTempCharge = maxCharge_degC * 10;  
+  minCellTempDischarge = minDischarge_degC;
+  maxCellTempDischarge = maxDischarge_degC;
+  minCellTempCharge = minCharge_degC;
+  maxCellTempCharge = maxCharge_degC;  
 }
 
 void bq769x0::setIdleCurrentThreshold(int current_mA)
@@ -783,6 +791,7 @@ int bq769x0::getCellVoltage(byte idCell)
 float bq769x0::getTemperatureDegC(byte channel)
 {
   if (channel >= 1 && channel <= 3) {
+    // return (float)temperatures[channel-1];
     return (float)temperatures[channel-1] / 10.0;
   }
   else
@@ -799,13 +808,15 @@ float bq769x0::getTemperatureDegF(byte channel)
 
 //----------------------------------------------------------------------------
 
+// internal temp
 void bq769x0::updateTemperatures()
 {
   float tmp = 0;
   int adcVal = 0;
   int vtsx = 0;
   unsigned long rts = 0;
-  
+
+  // writeRegister(SYS_CTRL1, B0000000);
 
   // internal air temperature (TS1)
   Wire.beginTransmission(I2CAddress);
@@ -830,7 +841,7 @@ void bq769x0::updateTemperatures()
 
 }
 
-// internal chip temperature (TS2)
+// ambient chip temperature (TS2)
 // TODO: implement 
 void bq769x0::updateTemperatures2()
 {
@@ -840,9 +851,9 @@ void bq769x0::updateTemperatures2()
   unsigned long rts = 0;
 
   // clear TEMP_SEL bit
-  //writeRegister(SYS_CTRL1, B0001000);
-  
-  // internal die temperature (TS2)
+  // writeRegister(SYS_CTRL1, B0001000); // ambient
+
+  // ambient temperature (TS2)
   Wire.beginTransmission(I2CAddress);
   Wire.write(TS2_HI_BYTE);
   Wire.endTransmission();
@@ -861,6 +872,34 @@ void bq769x0::updateTemperatures2()
     
     // update channel 2 temp (TS2)
     temperatures[1] = (tmp - 273.15) * 10.0;
+
+    // Serial.print("updateTemperature2(): ");
+    // Serial.println(temperatures[1]/10);
+
+
+    // check viable ambient temperature
+    // TODO: UNCOMMENT 842-851
+    if ((temperatures[1]) <= minCellTempDischarge || (temperatures[1]) >= maxCellTempCharge){
+      FAULT_FLAG = true;
+      TEMP_FAULT = true;
+    }
+
+    else{
+      FAULT_FLAG = false;
+      TEMP_FAULT = false;
+      writeRegister(SYS_CTRL2, B00000011);  // closes fets
+      // writeRegister(SYS_STAT, 0xFF);
+    }
+    
+    // Serial.print("minCellTempDischarge: ");
+    // Serial.println(minCellTempDischarge);
+
+    // Serial.print("maxCellTempCharge: ");
+    // Serial.println(maxCellTempCharge);
+
+    // Serial.print("Temp Fault Flag: ");
+    // Serial.println(TEMP_FAULT);
+
   }
 
   // set TEMP_SEL bit
@@ -974,6 +1013,11 @@ void bq769x0::updateVoltages()
       buf[2] = Wire.read(); // VCx_LO - all 8 bits are used
     }
 
+    // Serial.println("buf[0] - VCx_HI:");
+    // Serial.println(buf[0]);
+    // Serial.println("buf[0] - VCx_LO:");
+    // Serial.println(buf[2]);
+
     // combine VCx_HI and VCx_LO bits and calculate cell voltage
     adcVal = (buf[0] & 0b00111111) << 8 | buf[2];           // read VCx_HI bits and drop the first two bits, shift left then append VCx_LO bits
     cellVoltages[i] = adcVal * adcGain / 1000 + adcOffset;  // calculate real voltage in mV
@@ -991,9 +1035,24 @@ void bq769x0::updateVoltages()
       idCellMinVoltage = i;
     }
   }
+
   
   long adcValPack = ((readRegister(BAT_HI_BYTE) << 8) | readRegister(BAT_LO_BYTE)) & 0b1111111111111111;
   batVoltage = 4 * adcGain * adcValPack / 1000 + (connectedCells * adcOffset); // in original LibreSolar, connectedCells is converted to byte, maybe to reduce bit size
+
+  Serial.print("Connected Cells: ");
+  Serial.println(connectedCells);
+
+  Serial.print("Bat Voltage: ");
+  Serial.println(batVoltage);
+
+  Serial.print(": ");
+  Serial.println(batVoltage);
+
+  for (int j = 0; j < 6; j++)
+    Serial.println(cellVoltages[j]);
+
+  delay(1000);
 }
 
 //----------------------------------------------------------------------------
@@ -1083,6 +1142,7 @@ void bq769x0::setAlertInterruptFlag()
 {
   interruptTimestamp = millis();
   alertInterruptFlag = true;
+  // alertInterruptFlag = false;
 }
 
 //----------------------------------------------------------------------------

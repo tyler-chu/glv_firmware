@@ -15,7 +15,7 @@
 // const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
 const int SLAVE_ADDRESS = 0x08;                     // model 3: ic
 bq769x0 BMS;                                        // BMS Object 
-float temp, temp_ts1, temp_ts2, current, voltage;     // used for BMS
+float temp, temp_ts1, temp_ts2, current, voltage, bat_percentage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
 // status_ISR(): 
@@ -87,21 +87,23 @@ void bms_set_protection(){
     Serial.println("bms_set_protection(): Running...");
 
     BMS.updateTemperatures();
+    // BMS.updateTemperatures2();
     BMS.updateVoltages();
 
     BMS.setThermistorBetaValue(3977);
-    BMS.setTemperatureLimits(-20, 45, 0, 45);
+    BMS.setTemperatureLimits(-350, 550, 0, 550);
+    // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
     BMS.setShortCircuitProtection(14000, 200);
+
     BMS.setOvercurrentChargeProtection(8000, 200);
-    BMS.setOvercurrentDischargeProtection(8000, 320);
-    BMS.setCellUndervoltageProtection(2000, 2);
-    BMS.setCellOvervoltageProtection(4000, 2);
+    // BMS.setOvercurrentDischargeProtection(8000, 320);
 
-    BMS.setCellUndervoltageProtection(2700, 2);
-    BMS.setCellOvervoltageProtection(4000, 2);
-
-    // BMS.setCellOvervoltageProtection(21000, 2);
+    // BMS.setCellUndervoltageProtection(2800, 2);
+    // BMS.setCellOvervoltageProtection(4150, 2);
+    // BMS.setCellUndervoltageProtection(2700, 2);
+    // BMS.setCellOvervoltageProtection(4000, 2);
+    // BMS.setCellOvervoltageProtection(0, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
@@ -196,8 +198,8 @@ void i2c_rw_test(){
 void get_bms_values(){
     // Serial.println("get_bms_values(): Running ...");
 
-    if (BMS.FAULT_FLAG == true)
-        return;
+    // if (BMS.FAULT_FLAG == true)
+    //     return;
 
     regSYS_STAT_t system_status;
     system_status.regByte = BMS.readRegister(SYS_STAT);
@@ -245,9 +247,36 @@ void get_bms_values(){
     Serial.print("V_bat:    ");
     Serial.println(voltage);
 
+    // max voltage: (4.15 * 6 = 24.9)
+    // min voltage: (2.8 * 6 = 16.8)
+    // range = 8.1 v
+
+    // bat_percentage = ((voltage - 16.8) / 8.1) * 100;
+    bat_percentage = BMS.get_percentage();
+
+    Serial.print("Bat %:    ");
+    Serial.println(bat_percentage);
+
     Serial.println("-----------------------------");
 
     delay(1000);
+
+
+    // OV/UV Check
+
+    // if (bat_percentage > 100)
+    //     BMS.OV_FLAG= true;
+    //     // throw OV fault flag
+    // if (bat_percentage < 0)
+    //     BMS.UV_FLAG = true;
+    //     // throw UV fault flag
+
+    if (bat_percentage > 100)
+        BMS.OV_FLAG= true;
+        // throw OV fault flag
+    if (bat_percentage < 0)
+        BMS.UV_FLAG = true;
+        // throw UV fault flag
 
     // BMS.checkStatus();
 
