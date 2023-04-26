@@ -30,8 +30,10 @@ void setup()
 
 void loop()
 {
+  // TODO: fix checkStatus()
   get_bms_values();
   BMS.checkStatus();
   led_logging();
   bms_setup();
+  
 }
