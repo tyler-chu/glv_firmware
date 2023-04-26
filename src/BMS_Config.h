@@ -99,8 +99,8 @@ void bms_set_protection(){
     BMS.setOvercurrentChargeProtection(8000, 200);
     // BMS.setOvercurrentDischargeProtection(8000, 320);
 
-    BMS.setCellUndervoltageProtection(2700, 2);
-    BMS.setCellOvervoltageProtection(3800, 2);
+    // BMS.setCellUndervoltageProtection(2800, 2);
+    // BMS.setCellOvervoltageProtection(4150, 2);
     // BMS.setCellUndervoltageProtection(2700, 2);
     // BMS.setCellOvervoltageProtection(4000, 2);
     // BMS.setCellOvervoltageProtection(0, 2);
@@ -251,7 +251,8 @@ void get_bms_values(){
     // min voltage: (2.8 * 6 = 16.8)
     // range = 8.1 v
 
-    bat_percentage = ((voltage - 16.8) / 8.1) * 100;
+    // bat_percentage = ((voltage - 16.8) / 8.1) * 100;
+    bat_percentage = BMS.get_percentage();
 
     Serial.print("Bat %:    ");
     Serial.println(bat_percentage);
@@ -259,6 +260,23 @@ void get_bms_values(){
     Serial.println("-----------------------------");
 
     delay(1000);
+
+
+    // OV/UV Check
+
+    // if (bat_percentage > 100)
+    //     BMS.OV_FLAG= true;
+    //     // throw OV fault flag
+    // if (bat_percentage < 0)
+    //     BMS.UV_FLAG = true;
+    //     // throw UV fault flag
+
+    if (bat_percentage > 100)
+        BMS.OV_FLAG= true;
+        // throw OV fault flag
+    if (bat_percentage < 0)
+        BMS.UV_FLAG = true;
+        // throw UV fault flag
 
     // BMS.checkStatus();
 

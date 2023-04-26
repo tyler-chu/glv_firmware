@@ -311,6 +311,13 @@ bool bq769x0::enableDischarging()
   }
 }
 
+float bq769x0::get_percentage()
+{
+  float updated_voltage = batVoltage / 1000.00f;
+  float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  return bat_percentage;
+}
+
 //----------------------------------------------------------------------------
 // Fast function to check whether BMS has an error
 // (returns 0 if everything is OK)
@@ -332,7 +339,7 @@ int bq769x0::checkStatus()
   sys_stat.regByte = readRegister(SYS_STAT);
 
   // no fault/error
-  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT)){
+  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)){
     writeRegister(SYS_CTRL2, B00000011);  // closes fets
     // Serial.println("[No Error Detected...]");
     return 0;
@@ -342,8 +349,9 @@ int bq769x0::checkStatus()
   // fault = detected
   else {
     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
+    writeRegister(SYS_CTRL2, B00000000);  // opens fets
 
-    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT)) {
+    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)) {
       //LOG_PRINTLN("Interrupt: CC ready");
       updateCurrent(true);  // automatically clears CC ready flag	
     }
@@ -351,7 +359,7 @@ int bq769x0::checkStatus()
     // Serial.println("Made it past updateCurrent(): ...");
     
     // Serious error occured
-    if (sys_stat.regByte & B00111111 || (TEMP_FAULT))
+    if (sys_stat.regByte & B00111111 || (TEMP_FAULT) || (OV_FLAG) || (UV_FLAG))
     {
       if (alertInterruptFlag == true) {
         secSinceErrorCounter = 0;
@@ -386,24 +394,42 @@ int bq769x0::checkStatus()
           }
         }
 
-        if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
-          updateVoltages();
-          if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
-            Serial.println("UV Error detected");
-            LOG_PRINTLN(F("- Clearing UV Error ..."));
-            writeRegister(SYS_STAT, B00001000);
+        if (OV_FLAG){
+          float bat_percentage = get_percentage();
+          // get updated battery percentage
+          if (bat_percentage > 100){
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+            OV_FLAG = false;
           }
         }
 
-        if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
-          updateVoltages();
-          if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
-
-            // LOG_PRINTLN(F("- Clearing OV Error ..."));
-            writeRegister(SYS_STAT, B00000100); // clears fault
-            // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+        if (UV_FLAG){
+          float bat_percentage = get_percentage();
+          // get updated battery percentage
+          if (bat_percentage < 0){
+            writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+            UV_FLAG = false;
           }
         }
+
+        // if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
+        //   updateVoltages();
+        //   if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
+        //     Serial.println("UV Error detected");
+        //     LOG_PRINTLN(F("- Clearing UV Error ..."));
+        //     writeRegister(SYS_STAT, B00001000);
+        //   }
+        // }
+
+        // if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
+        //   updateVoltages();
+        //   if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
+
+        //     // LOG_PRINTLN(F("- Clearing OV Error ..."));
+        //     writeRegister(SYS_STAT, B00000100); // clears fault
+        //     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+        //   }
+        // }
 
         if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
           if (secSinceErrorCounter % 60 == 0) {
@@ -861,6 +887,8 @@ void bq769x0::updateTemperatures2()
     else{
       FAULT_FLAG = false;
       TEMP_FAULT = false;
+      writeRegister(SYS_CTRL2, B00000011);  // closes fets
+      // writeRegister(SYS_STAT, 0xFF);
     }
     
     // Serial.print("minCellTempDischarge: ");
@@ -985,6 +1013,11 @@ void bq769x0::updateVoltages()
       buf[2] = Wire.read(); // VCx_LO - all 8 bits are used
     }
 
+    // Serial.println("buf[0] - VCx_HI:");
+    // Serial.println(buf[0]);
+    // Serial.println("buf[0] - VCx_LO:");
+    // Serial.println(buf[2]);
+
     // combine VCx_HI and VCx_LO bits and calculate cell voltage
     adcVal = (buf[0] & 0b00111111) << 8 | buf[2];           // read VCx_HI bits and drop the first two bits, shift left then append VCx_LO bits
     cellVoltages[i] = adcVal * adcGain / 1000 + adcOffset;  // calculate real voltage in mV
@@ -1002,9 +1035,24 @@ void bq769x0::updateVoltages()
       idCellMinVoltage = i;
     }
   }
+
   
   long adcValPack = ((readRegister(BAT_HI_BYTE) << 8) | readRegister(BAT_LO_BYTE)) & 0b1111111111111111;
   batVoltage = 4 * adcGain * adcValPack / 1000 + (connectedCells * adcOffset); // in original LibreSolar, connectedCells is converted to byte, maybe to reduce bit size
+
+  Serial.print("Connected Cells: ");
+  Serial.println(connectedCells);
+
+  Serial.print("Bat Voltage: ");
+  Serial.println(batVoltage);
+
+  Serial.print(": ");
+  Serial.println(batVoltage);
+
+  for (int j = 0; j < 6; j++)
+    Serial.println(cellVoltages[j]);
+
+  delay(1000);
 }
 
 //----------------------------------------------------------------------------

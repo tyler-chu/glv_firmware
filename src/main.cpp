@@ -33,4 +33,5 @@ void loop()
   get_bms_values();
   BMS.checkStatus();
   led_logging();
+  bms_setup();
 }
