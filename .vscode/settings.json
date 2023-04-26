@@ -11,7 +11,10 @@
     "__bit_reference": "cpp",
     "__hash_table": "cpp",
     "__split_buffer": "cpp",
-    "iterator": "cpp"
+    "iterator": "cpp",
+    "*.tcc": "cpp",
+    "memory": "cpp",
+    "random": "cpp"
   },
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.cCompilerPath": "clang",

@@ -142,7 +142,7 @@ void check_logs(){
       Serial.print("- Log Starting @: ");
       Serial.println(file_counter);
       Serial.println("-----------------------------");
-
+      file_counter--;
     }
   }
 
