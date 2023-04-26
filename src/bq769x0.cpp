@@ -31,6 +31,8 @@
 #include <string>
 // #include <LED_CONFIG.h>
 
+#define ALERT_PIN 17
+
 // for the ISR to know the bq769x0 instance
 bq769x0* bq769x0::instancePointer = 0;
 
@@ -171,8 +173,13 @@ bool bq769x0::determineAddressAndCrc(void)
   I2CAddress = 0x08;  // model 3: bm ic
   crcEnabled = true;
   writeRegister(CC_CFG, 0x19);
-  LOG_PRINTLN("- For optimal performance, these bits should be programmed to 0x19 upon device startup.");
-  LOG_PRINTLN("- Write: (0x19) --> CC_CFG Register");
+
+  if (optimal_counter == 0){
+    LOG_PRINTLN("- For optimal performance, these bits should be programmed to 0x19 upon device startup.");
+    LOG_PRINTLN("- Write: (0x19) --> CC_CFG Register");
+  }
+
+  optimal_counter++; 
   if (readRegister(CC_CFG) == 0x19) return true;
 
   return false;
@@ -341,6 +348,7 @@ int bq769x0::checkStatus()
   // no fault/error
   if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)){
     writeRegister(SYS_CTRL2, B00000011);  // closes fets
+    // begin(ALERT_PIN, 3); // closes fets pt. 2
     // Serial.println("[No Error Detected...]");
     return 0;
   }
@@ -400,6 +408,7 @@ int bq769x0::checkStatus()
           if (bat_percentage > 100){
             writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
             OV_FLAG = false;
+            fet_closer();
           }
         }
 
@@ -409,6 +418,7 @@ int bq769x0::checkStatus()
           if (bat_percentage < 0){
             writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
             UV_FLAG = false;
+            fet_closer();
           }
         }
 
@@ -477,6 +487,8 @@ int bq769x0::checkStatus()
     }
 
     FAULT_FLAG = false;
+    // begin(ALERT_PIN, 3); // closes fets pt. 2
+    fet_closer();
     // TEMP_FAULT = false;
     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
     
@@ -484,6 +496,58 @@ int bq769x0::checkStatus()
 
   }
 
+}
+
+int bq769x0::fet_closer(){
+
+  int bootPin = 3;
+  int alertPin = 17;
+
+  // initialize variables
+  for (byte i = 0; i < numberOfCells; i++) {
+    cellVoltages[i] = 0;
+  }
+  
+  // Boot IC if pin is defined (else: manual boot via push button has to be done before calling this method)
+  if (bootPin >= 0)
+  {
+    pinMode(bootPin, OUTPUT);
+    digitalWrite(bootPin, HIGH);
+    delay(5);   // wait 5 ms for device to receive boot signal (datasheet: max. 2 ms)
+    pinMode(bootPin, INPUT);     // don't disturb temperature measurement
+    delay(10);  // wait for device to boot up completely (datasheet: max. 10 ms)
+  }
+ 
+  if (determineAddressAndCrc())
+  {
+    // LOG_PRINT("- CRC Enabled: ");
+    // LOG_PRINTLN(crcEnabled);
+
+    // TODO: write new print statements for below
+    // initial settings for bq769x0
+    writeRegister(SYS_CTRL1, B00011000);  // switch external thermistor (TEMP_SEL) and ADC on (ADC_EN)
+    // LOG_PRINTLN("- Write: (B00011000) --> SYS_CTRL1 Register");
+    // LOG_PRINTLN("     - Switch External Thermistor (TEMP_SEL) & ADC On (ADC_EN)");
+    writeRegister(SYS_CTRL2, B01000000);  // switch CC_EN on
+    // LOG_PRINTLN("- Write: (B01000000) --> SYS_CTRL2 Register");
+    // LOG_PRINTLN("     - Switch CC_EN ON");
+
+    // attach ALERT interrupt to this instance
+    instancePointer = this;
+    attachInterrupt(digitalPinToInterrupt(alertPin), bq769x0::alertISR, RISING);
+
+    // get ADC offset and gain
+    adcOffset = (signed int) readRegister(ADCOFFSET);  // convert from 2's complement
+    adcGain = 365 + (((readRegister(ADCGAIN1) & B00001100) << 1) | ((readRegister(ADCGAIN2) & B11100000) >> 5)); // uV/LSB
+    
+    return 0;
+  }
+
+  else
+  {
+    // LOG_PRINTLN("BMS communication error");
+    return 1;
+  }
 }
 //----------------------------------------------------------------------------
 
@@ -889,6 +953,7 @@ void bq769x0::updateTemperatures2()
       TEMP_FAULT = false;
       writeRegister(SYS_CTRL2, B00000011);  // closes fets
       // writeRegister(SYS_STAT, 0xFF);
+      
     }
     
     // Serial.print("minCellTempDischarge: ");
@@ -1040,19 +1105,19 @@ void bq769x0::updateVoltages()
   long adcValPack = ((readRegister(BAT_HI_BYTE) << 8) | readRegister(BAT_LO_BYTE)) & 0b1111111111111111;
   batVoltage = 4 * adcGain * adcValPack / 1000 + (connectedCells * adcOffset); // in original LibreSolar, connectedCells is converted to byte, maybe to reduce bit size
 
-  Serial.print("Connected Cells: ");
-  Serial.println(connectedCells);
+  // Serial.print("Connected Cells: ");
+  // Serial.println(connectedCells);
 
-  Serial.print("Bat Voltage: ");
-  Serial.println(batVoltage);
+  // Serial.print("Bat Voltage: ");
+  // Serial.println(batVoltage);
 
-  Serial.print(": ");
-  Serial.println(batVoltage);
+  // Serial.print(": ");
+  // Serial.println(batVoltage);
 
-  for (int j = 0; j < 6; j++)
-    Serial.println(cellVoltages[j]);
+  // for (int j = 0; j < 6; j++)
+  //   Serial.println(cellVoltages[j]);
 
-  delay(1000);
+  // delay(1000);
 }
 
 //----------------------------------------------------------------------------

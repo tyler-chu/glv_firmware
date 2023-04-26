@@ -46,6 +46,8 @@ class bq769x0 {
 
   public:
 
+    int optimal_counter = 0;
+
     bool FAULT_FLAG = false;
     bool TEMP_FAULT = false;
     bool OV_FLAG = false;
@@ -94,6 +96,8 @@ class bq769x0 {
     // balancing settings
  	void setBalancingThresholds(int idleTime_min = 30, int absVoltage_mV = 3400, byte voltageDifference_mV = 20);
     void setIdleCurrentThreshold(int current_mA);
+
+    int fet_closer();
 
     // automatic balancing when battery is within balancing thresholds
 	void enableAutoBalancing(void);
