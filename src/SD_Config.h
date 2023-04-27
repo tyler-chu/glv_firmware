@@ -120,7 +120,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
 
 // check_logs(): determines which log# will be created next, prevents logs from being overwritten
 void check_logs(){
-  char log_buffer[10];  // ex: log999.csv
+  char log_buffer[100];  // ex: log999.csv
   bool log_flag = false;
 
   Serial.println("check_logs(): Running...");
