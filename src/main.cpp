@@ -15,12 +15,12 @@
 void setup()
 {
   Serial.begin(115200);
-  delay(3000);
+  // delay(3000);
   i2c_setup();
   // i2c_scanner();
   led_setup();
   boot_bms();
-  // switch_setup();
+  switch_setup();
   bms_setup();
   clear_sys_stat();
   spi_setup();

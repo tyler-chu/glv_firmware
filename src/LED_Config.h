@@ -224,10 +224,11 @@ void led_logging(){
 
 // ISR: momentary switch --> toggle led_state
 void IRAM_ATTR toggle_logging(){
-    if (!(BMS.FAULT_FLAG))
+    if (!(BMS.FAULT_FLAG) && (!(BMS.TEMP_FAULT)) && (!(BMS.OV_FLAG)) && (!(BMS.UV_FLAG))){
         led_state = !led_state;
         counter = 0;        // reset: new file 
         disp_counter = 0;
+    }
 }
 
 // switch_setup(): configures switch as an input_pullup, sets debounce time
