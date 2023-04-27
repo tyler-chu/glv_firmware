@@ -10,7 +10,7 @@
 
 #define I2C_SDA 7
 #define I2C_SCL 9
-#define ALERT_PIN 17
+#define ALERT_PIN 5
 
 // const int SLAVE_ADDRESS = 0x18;                  // model 7: ic
 const int SLAVE_ADDRESS = 0x08;                     // model 3: ic

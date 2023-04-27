@@ -31,7 +31,7 @@
 #include <string>
 // #include <LED_CONFIG.h>
 
-#define ALERT_PIN 17
+#define ALERT_PIN 5
 
 // for the ISR to know the bq769x0 instance
 bq769x0* bq769x0::instancePointer = 0;
