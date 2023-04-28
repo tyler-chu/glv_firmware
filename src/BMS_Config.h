@@ -94,7 +94,8 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-350, 550, 0, 550);
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
-    BMS.setShortCircuitProtection(2500, 200);
+    // BMS.setShortCircuitProtection(18000, 200);
+    BMS.setShortCircuitProtection(3000, 200);
 
     BMS.setOvercurrentChargeProtection(2500, 200);
     // BMS.setOvercurrentDischargeProtection(8000, 320);
@@ -170,6 +171,39 @@ void configure() {
     system_status4.regByte = BMS.readRegister(SYS_CTRL2);
     Serial.print("SYS_CTRL2: ");
     Serial.println(system_status4.regByte);
+}
+
+void checkSCD() {
+    while (BMS.SCD_FLAG == true) {
+        BMS.writeRegister(SYS_CTRL2, B00000000); // open FETs
+        delay(5000);
+        BMS.writeRegister(SYS_CTRL2, B01000011);
+        delay(3000);
+        // Serial.println("In loop...");
+
+        // Serial.print("Bat Current: ");
+        // Serial.println(-BMS.batCurrent / 1000.00f);
+
+        // Serial.print("scd_threshold: ");
+        // Serial.println(-BMS.scd_threshold / 1000.00f);
+
+        BMS.updateCurrent();
+
+        if ( (-BMS.batCurrent >= 0.00) && (-BMS.batCurrent < BMS.scd_threshold) ){
+            Serial.println("FIXED!!!");
+            Serial.print("Bat Current: ");
+            Serial.println(-BMS.batCurrent);
+
+            Serial.print("scd_threshold: ");
+            Serial.println(BMS.scd_threshold / 1000.00f);
+
+            delay(5000);
+            // writeRegister(SYS_STAT, B00000011);
+            BMS.SCD_FLAG = false;
+            BMS.FAULT_FLAG = false;
+            BMS.fet_closer();
+        }
+    }
 }
 
 /**

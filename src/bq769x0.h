@@ -49,13 +49,20 @@ class bq769x0 {
     int optimal_counter = 0;
 
     bool FAULT_FLAG = false;
+    bool SCD_FLAG = false;
     bool TEMP_FAULT = false;
     bool OV_FLAG = false;
     bool UV_FLAG = false;
 
+    long batCurrent; 
+
+    float scd_threshold = 100000;
+
     int fault_counter = 0;
     void xready_handling();
     float get_percentage();
+
+    // void checkSCD();
     
     void writeRegister(byte address, int data);
     int readRegister(byte address);
@@ -136,7 +143,7 @@ class bq769x0 {
     byte idCellMaxVoltage;
     byte idCellMinVoltage;
 	long long batVoltage;                           // mV
-	long batCurrent;                                // mA
+	// long batCurrent;                                // mA
 	int temperatures[MAX_NUMBER_OF_THERMISTORS];    // °C/10
 
     // Current limits (mA)

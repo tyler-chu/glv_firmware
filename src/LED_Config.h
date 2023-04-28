@@ -133,13 +133,22 @@ void fault_checker(uint8_t regByte){
         Serial.println("- UV Error [y]");
         strcpy(fault_name, "UV Error");
     }
+
+    if (BMS.SCD_FLAG){
+        Serial.println("- SCD Error [y]");
+        strcpy(fault_name, "SCD Error"); 
+    }
 }
 
 // fault_detection(): check to see if a fault is present 
 void fault_detection(uint8_t regByte){
     
     // check if a fault is present 
-    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || regByte == OCD1 || regByte == OCD2 || (BMS.TEMP_FAULT == true) || (BMS.OV_FLAG == true) || (BMS.UV_FLAG == true)){
+    if (regByte == XREADY1 || regByte == XREADY2 || 
+        regByte == UV1 || regByte == UV2 || regByte == OV1 || 
+        regByte == OV2 || regByte == SCD1 || regByte == SCD2 || 
+        regByte == OCD1 || regByte == OCD2 || (BMS.TEMP_FAULT == true) || 
+        (BMS.OV_FLAG == true) || (BMS.UV_FLAG == true) || (BMS.SCD_FLAG == true)){
 
         // if fault, always log
         led_state = 1;
@@ -214,6 +223,11 @@ void led_logging(){
 
     if (disp_counter == 0)
         disp_counter++; // 2nd iteration of a state (will not print out repetitive message)
+
+    
+    if (BMS.SCD_FLAG == true){
+        BMS.checkStatus();
+    }
 
 
     // TODO:
