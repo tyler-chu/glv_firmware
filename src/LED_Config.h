@@ -26,8 +26,8 @@
 #define SCD2 130
 #define UTEMP 254
 #define OTEMP 255
-// #define OCD1 1
-// #define OCD2 129
+#define OCD1 1
+#define OCD2 129
 
 ezButton button(MOMENTARY_SWITCH);
 volatile int led_state = LOW;   // LOW = logging (off), HIGH = logging (on)
@@ -109,12 +109,14 @@ void fault_checker(uint8_t regByte){
             Serial.println("- SCD Error [y]");
             strcpy(fault_name, "SCD Error");
             break;
-        // case OCD1:
-        //     Serial.println("- OCD Error [y]");
-        //     break;
-        // case OCD2:
-        //     Serial.println("- OCD Error [y]");
-        //     break;
+        case OCD1:
+            Serial.println("- OCD Error [y]");
+            strcpy(fault_name, "OCD Error");
+            break;
+        case OCD2:
+            Serial.println("- OCD Error [y]");
+            strcpy(fault_name, "OCD Error");
+            break;
         }
     
     if (BMS.TEMP_FAULT){
@@ -137,7 +139,7 @@ void fault_checker(uint8_t regByte){
 void fault_detection(uint8_t regByte){
     
     // check if a fault is present 
-    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || (BMS.TEMP_FAULT == true) || (BMS.OV_FLAG == true) || (BMS.UV_FLAG == true)){
+    if (regByte == XREADY1 || regByte == XREADY2 || regByte == UV1 || regByte == UV2 || regByte == OV1 || regByte == OV2 || regByte == SCD1 || regByte == SCD2 || regByte == OCD1 || regByte == OCD2 || (BMS.TEMP_FAULT == true) || (BMS.OV_FLAG == true) || (BMS.UV_FLAG == true)){
 
         // if fault, always log
         led_state = 1;

@@ -1,7 +1,7 @@
 BMS_Config:
     I2C_SDA         7
     I2C_SCL         9
-    ALERT_PIN       17
+    ALERT_PIN       17/5
     CHG_FET         12
     DSG_FET         14
 

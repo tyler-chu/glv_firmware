@@ -31,7 +31,7 @@
 #include <string>
 // #include <LED_CONFIG.h>
 
-#define ALERT_PIN 17
+#define ALERT_PIN 5
 
 // for the ISR to know the bq769x0 instance
 bq769x0* bq769x0::instancePointer = 0;
@@ -442,13 +442,20 @@ int bq769x0::checkStatus()
         // }
 
         if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
-          if (secSinceErrorCounter % 60 == 0) {
+          // if (secSinceErrorCounter % 60 == 0) {
             
             // LOG_PRINTLN(F("- Clearing SCD Error ..."));
             writeRegister(SYS_STAT, B00000010);
           }
-        }
+        
 
+
+        // not mandatory
+        if (sys_stat.regByte == 1 || sys_stat.regByte == 129) { // OCD
+            // LOG_PRINTLN(F("Clearing OCD error"));
+            writeRegister(SYS_STAT, B00000001);
+          
+        }
 
         // temp error 
         if (TEMP_FAULT == true){
@@ -469,15 +476,6 @@ int bq769x0::checkStatus()
         // if (TEMP_FAULT == false)
         //   writeRegister(SYS_CTRL2, B00000011);  // opens fets
 
-
-        // not mandatory
-        if (sys_stat.regByte & B00000001) { // OCD
-          if (secSinceErrorCounter % 60 == 0) {
-
-            // LOG_PRINTLN(F("Clearing OCD error"));
-            writeRegister(SYS_STAT, B00000001);
-          }
-        }
         
         secSinceErrorCounter++;
       }
@@ -825,7 +823,8 @@ int bq769x0::setCellOvervoltageProtection(int voltage_mV, int delay_s)
 
 long bq769x0::getBatteryCurrent()
 {
-  return (- batCurrent - 30);
+  // return (- batCurrent - 30);
+  return (batCurrent);
 }
 
 //----------------------------------------------------------------------------
