@@ -96,9 +96,9 @@ void bms_set_protection(){
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
     // BMS.setShortCircuitProtection(18000, 200);
-    BMS.setShortCircuitProtection(3000, 200);
+    BMS.setShortCircuitProtection(14000, 200);
 
-    BMS.setOvercurrentChargeProtection(2500, 200);
+    BMS.setOvercurrentChargeProtection(8000, 200);
     // BMS.setOvercurrentDischargeProtection(8000, 320);
 
     BMS.setCellUndervoltageProtection(2800, 2);
