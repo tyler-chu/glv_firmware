@@ -231,11 +231,15 @@ bool bq769x0::enableCharging()
   Serial.println(checkStatus());
   delay(2000);
 
+  // if (checkStatus() == 0 && 
+  //   cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
+  //   temperatures[0] < maxCellTempCharge &&
+  //   temperatures[0] > minCellTempCharge)
   if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
-    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000001);  // switch CHG on
+    writeRegister(SYS_CTRL2, sys_ctrl2 | B01000001);  // switch CHG on
     LOG_PRINTLN("enableCharging(): Enabled");
 
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
@@ -291,7 +295,7 @@ bool bq769x0::enableDischarging()
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
-    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000010);  // switch DSG on
+    writeRegister(SYS_CTRL2, sys_ctrl2 | B01000010);  // switch DSG on
     LOG_PRINTLN("enableDischarging(): Enabled");
     return true;
   }
@@ -346,8 +350,8 @@ int bq769x0::checkStatus()
   sys_stat.regByte = readRegister(SYS_STAT);
 
   // no fault/error
-  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)){
-    writeRegister(SYS_CTRL2, B00000011);  // closes fets
+  if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG) && (!SCD_FLAG)){
+    // writeRegister(SYS_CTRL2, B00000011);  // closes fets
     // begin(ALERT_PIN, 3); // closes fets pt. 2
     // Serial.println("[No Error Detected...]");
     return 0;
@@ -357,9 +361,9 @@ int bq769x0::checkStatus()
   // fault = detected
   else {
     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
-    writeRegister(SYS_CTRL2, B00000000);  // opens fets
+    writeRegister(SYS_CTRL2, B01000000);  // opens fets
 
-    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)) {
+    if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG) && (!SCD_FLAG)) {
       //LOG_PRINTLN("Interrupt: CC ready");
       updateCurrent(true);  // automatically clears CC ready flag	
     }
@@ -367,7 +371,7 @@ int bq769x0::checkStatus()
     // Serial.println("Made it past updateCurrent(): ...");
     
     // Serious error occured
-    if (sys_stat.regByte & B00111111 || (TEMP_FAULT) || (OV_FLAG) || (UV_FLAG))
+    if (sys_stat.regByte & B00111111 || (TEMP_FAULT) || (OV_FLAG) || (UV_FLAG) && (SCD_FLAG))
     {
       if (alertInterruptFlag == true) {
         secSinceErrorCounter = 0;
@@ -422,6 +426,22 @@ int bq769x0::checkStatus()
           }
         }
 
+        // while (SCD_FLAG){
+        //   // keep fets open for 5 seconds
+        //   // close fets, get updated current, check condition
+        //   Serial.println("made it into the loop");
+        //   // delay(5000);
+        //   // fet_closer();
+        //   updateCurrent();
+        //   if ( (batCurrent != 0.00) && (-batCurrent < scd_threshold) ){
+        //     // writeRegister(SYS_STAT, B00000011);
+        //     SCD_FLAG = false;
+        //     FAULT_FLAG = false;
+        //     fet_closer();
+        //   }
+
+        // }
+
         // if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
         //   updateVoltages();
         //   if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
@@ -441,25 +461,23 @@ int bq769x0::checkStatus()
         //   }
         // }
 
-        if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
-          // if (secSinceErrorCounter % 60 == 0) {
+        // if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
+        //   // if (secSinceErrorCounter % 60 == 0) {
             
-            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
-            writeRegister(SYS_STAT, B00000010);
-          }
+        //     // LOG_PRINTLN(F("- Clearing SCD Error ..."));
+        //     writeRegister(SYS_STAT, B00000010);
+        //   }
         
-
-
         // not mandatory
-        if (sys_stat.regByte == 1 || sys_stat.regByte == 129) { // OCD
-            // LOG_PRINTLN(F("Clearing OCD error"));
-            writeRegister(SYS_STAT, B00000001);
+        // if (sys_stat.regByte == 1 || sys_stat.regByte == 129) { // OCD
+        //     // LOG_PRINTLN(F("Clearing OCD error"));
+        //     writeRegister(SYS_STAT, B00000001);
           
-        }
+        // }
 
         // temp error 
         if (TEMP_FAULT == true){
-          writeRegister(SYS_CTRL2, B00000000);  // opens fets
+          writeRegister(SYS_CTRL2, B01000000);  // opens fets
           Serial.println("INSIDE TEMPERATURE ERROR...");
           // TODO: disabled charging/discharging
           // disableCharging();
@@ -484,7 +502,8 @@ int bq769x0::checkStatus()
       errorStatus = 0;
     }
 
-    FAULT_FLAG = false;
+    if (!SCD_FLAG)
+      FAULT_FLAG = false;
     // begin(ALERT_PIN, 3); // closes fets pt. 2
     fet_closer();
     // TEMP_FAULT = false;
@@ -677,6 +696,7 @@ void bq769x0::setIdleCurrentThreshold(int current_mA)
 
 long bq769x0::setShortCircuitProtection(long current_mA, int delay_us)
 {
+  scd_threshold = current_mA - 1000;
   LOG_PRINTLN("setSCD");
   regPROTECT1_t protect1;
   
@@ -824,7 +844,7 @@ int bq769x0::setCellOvervoltageProtection(int voltage_mV, int delay_s)
 long bq769x0::getBatteryCurrent()
 {
   // return (- batCurrent - 30);
-  return (batCurrent);
+  return (-batCurrent);
 }
 
 //----------------------------------------------------------------------------
@@ -948,11 +968,12 @@ void bq769x0::updateTemperatures2()
     }
 
     else{
-      FAULT_FLAG = false;
-      TEMP_FAULT = false;
-      writeRegister(SYS_CTRL2, B00000011);  // closes fets
-      // writeRegister(SYS_STAT, 0xFF);
-      
+      if (!SCD_FLAG){
+        FAULT_FLAG = false;
+        TEMP_FAULT = false;
+        writeRegister(SYS_CTRL2, B01000011);  // closes fets
+        // writeRegister(SYS_STAT, 0xFF);
+      }
     }
     
     // Serial.print("minCellTempDischarge: ");
@@ -970,7 +991,36 @@ void bq769x0::updateTemperatures2()
   //writeRegister(SYS_CTRL1, B0001000);
 }
 
+// void bq769x0::checkSCD() {
+//     while (SCD_FLAG == true) {
+//         // writeRegister(SYS_CTRL2, B01000000); // open FETs
+//         // delay(5000);
+//         // writeRegister(SYS_CTRL2, B01000011);
+//         Serial.println("In loop...");
 
+//         Serial.print("Bat Current: ");
+//         Serial.println(-batCurrent / 1000.00f);
+
+//         Serial.print("scd_threshold: ");
+//         Serial.println(-scd_threshold / 1000.00f);
+
+//         // log that there is a fault
+//         char fault_name2[50] = "SCD Fault";
+//         FAULT_FLAG = true;
+//         spi_write(temp_ts1, temp_ts2, current, voltage, bat_percentage, fault_name2);
+
+//         updateCurrent();
+
+//         if ( (batCurrent != 0.00) && (-batCurrent < scd_threshold) ){
+//             Serial.println("FIXED!!!");
+//             delay(5000);
+//             // writeRegister(SYS_STAT, B00000011);
+//             SCD_FLAG = false;
+//             FAULT_FLAG = false;
+//             fet_closer();
+//         }
+//     }
+// }
 
 
 //----------------------------------------------------------------------------
@@ -1010,6 +1060,28 @@ void bq769x0::updateCurrent(bool ignoreCCReadyFlag)
     writeRegister(SYS_STAT, B10000000);  // Clear CC ready flag	
     // LOG_PRINTLN("updateCurrent: updated, CC flag cleared");
   }
+
+  // Serial.print("Bat Current: ");
+  // Serial.println(-batCurrent / 1000.00f);
+  // delay(1000);
+
+  // SCD/OCD Detection (the # is the threshold)
+  if ( (-batCurrent / 1000.00f) >= (scd_threshold / 1000.00f) ){
+    FAULT_FLAG = true;
+    SCD_FLAG = true;
+    // writeRegister(SYS_CTRL2, B01000000); // open FETs
+  }
+
+  // else {
+  //   FAULT_FLAG = false;
+  //   SCD_FLAG = false;
+  // }
+
+  Serial.print("FAULT_FLAG: ");
+  Serial.println(FAULT_FLAG);
+  Serial.print("SCD_FLAG: ");
+  Serial.println(SCD_FLAG);
+  
 }
 
 //----------------------------------------------------------------------------

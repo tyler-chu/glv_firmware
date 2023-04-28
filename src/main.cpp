@@ -19,7 +19,6 @@ void setup()
   i2c_setup();
   // i2c_scanner();
   led_setup();
-  led_boot();
   boot_bms();
   switch_setup();
   bms_setup();
@@ -28,6 +27,7 @@ void setup()
   // check_logs();
   // lcd_setup();
   // lcd_display_ui();
+  // configure();
 }
 
 void loop()
@@ -36,6 +36,7 @@ void loop()
   get_bms_values();
   BMS.checkStatus();
   led_logging();
+  checkSCD();
   // lcd_display_motorvator();
   // bms_setup();
 }
