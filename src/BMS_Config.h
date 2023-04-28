@@ -7,6 +7,7 @@
 #include <registers.h>
 #include <chrono>
 #include <LED_Config.h>
+#include <esp_sleep.h>
 
 #define I2C_SDA 7
 #define I2C_SCL 9
@@ -174,35 +175,41 @@ void configure() {
 }
 
 void checkSCD() {
-    while (BMS.SCD_FLAG == true) {
-        BMS.writeRegister(SYS_CTRL2, B00000000); // open FETs
-        delay(5000);
-        BMS.writeRegister(SYS_CTRL2, B01000011);
-        delay(3000);
-        // Serial.println("In loop...");
+    if (BMS.SCD_FLAG == true) {
+        Serial.println("- BMS.shutdown(): Running...");
+        BMS.shutdown();
+        Serial.println("- ESP-32: Entering Deep-Sleep Mode");
+        // sleep esp-32 
+        esp_deep_sleep_start();
 
-        // Serial.print("Bat Current: ");
-        // Serial.println(-BMS.batCurrent / 1000.00f);
+        // BMS.writeRegister(SYS_CTRL2, B00000000); // open FETs
+        // delay(5000);
+        // BMS.writeRegister(SYS_CTRL2, B01000011);
+        // delay(3000);
+        // // Serial.println("In loop...");
 
-        // Serial.print("scd_threshold: ");
-        // Serial.println(-BMS.scd_threshold / 1000.00f);
+        // // Serial.print("Bat Current: ");
+        // // Serial.println(-BMS.batCurrent / 1000.00f);
 
-        BMS.updateCurrent();
+        // // Serial.print("scd_threshold: ");
+        // // Serial.println(-BMS.scd_threshold / 1000.00f);
 
-        if ( (-BMS.batCurrent >= 0.00) && (-BMS.batCurrent < BMS.scd_threshold) ){
-            Serial.println("FIXED!!!");
-            Serial.print("Bat Current: ");
-            Serial.println(-BMS.batCurrent);
+        // BMS.updateCurrent();
 
-            Serial.print("scd_threshold: ");
-            Serial.println(BMS.scd_threshold / 1000.00f);
+        // if ( (-BMS.batCurrent >= 0.00) && (-BMS.batCurrent < BMS.scd_threshold) ){
+        //     Serial.println("FIXED!!!");
+        //     Serial.print("Bat Current: ");
+        //     Serial.println(-BMS.batCurrent);
 
-            delay(5000);
-            // writeRegister(SYS_STAT, B00000011);
-            BMS.SCD_FLAG = false;
-            BMS.FAULT_FLAG = false;
-            BMS.fet_closer();
-        }
+        //     Serial.print("scd_threshold: ");
+        //     Serial.println(BMS.scd_threshold / 1000.00f);
+
+        //     delay(5000);
+        //     // writeRegister(SYS_STAT, B00000011);
+        //     BMS.SCD_FLAG = false;
+        //     BMS.FAULT_FLAG = false;
+        //     BMS.fet_closer();
+        
     }
 }
 
