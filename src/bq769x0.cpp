@@ -231,11 +231,15 @@ bool bq769x0::enableCharging()
   Serial.println(checkStatus());
   delay(2000);
 
-  if (1)
+  if (checkStatus() == 0 && 
+    cellVoltages[idCellMaxVoltage] < maxCellVoltage &&
+    temperatures[0] < maxCellTempCharge &&
+    temperatures[0] > minCellTempCharge)
+  // if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
-    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000001);  // switch CHG on
+    writeRegister(SYS_CTRL2, sys_ctrl2 | B01000001);  // switch CHG on
     LOG_PRINTLN("enableCharging(): Enabled");
 
     Serial.print("cellVoltages[idCellMaxVoltage]: ");
@@ -283,15 +287,15 @@ bool bq769x0::enableCharging()
 bool bq769x0::enableDischarging()
 {
   LOG_PRINTLN("enableDischarging()");
-  // if (checkStatus() == 0 &&
-  //   cellVoltages[idCellMinVoltage] > minCellVoltage &&
-  //   temperatures[0] < maxCellTempDischarge &&
-  //   temperatures[0] > minCellTempDischarge)
-  if (1)
+  if (checkStatus() == 0 &&
+    cellVoltages[idCellMinVoltage] > minCellVoltage &&
+    temperatures[0] < maxCellTempDischarge &&
+    temperatures[0] > minCellTempDischarge)
+  // if (1)
   {
     byte sys_ctrl2;
     sys_ctrl2 = readRegister(SYS_CTRL2);
-    writeRegister(SYS_CTRL2, sys_ctrl2 | B00000010);  // switch DSG on
+    writeRegister(SYS_CTRL2, sys_ctrl2 | B01000010);  // switch DSG on
     LOG_PRINTLN("enableDischarging(): Enabled");
     return true;
   }
@@ -347,7 +351,7 @@ int bq769x0::checkStatus()
 
   // no fault/error
   if (((sys_stat.regByte == 0 || sys_stat.regByte == 128 || sys_stat.regByte == 16)) && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)){
-    writeRegister(SYS_CTRL2, B00000011);  // closes fets
+    // writeRegister(SYS_CTRL2, B00000011);  // closes fets
     // begin(ALERT_PIN, 3); // closes fets pt. 2
     // Serial.println("[No Error Detected...]");
     return 0;
@@ -357,7 +361,7 @@ int bq769x0::checkStatus()
   // fault = detected
   else {
     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000000);  // opens fets
-    writeRegister(SYS_CTRL2, B00000000);  // opens fets
+    writeRegister(SYS_CTRL2, B01000000);  // opens fets
 
     if (sys_stat.bits.CC_READY == 1 && (!TEMP_FAULT) && (!OV_FLAG) && (!UV_FLAG)) {
       //LOG_PRINTLN("Interrupt: CC ready");
@@ -824,7 +828,7 @@ int bq769x0::setCellOvervoltageProtection(int voltage_mV, int delay_s)
 long bq769x0::getBatteryCurrent()
 {
   // return (- batCurrent - 30);
-  return (batCurrent);
+  return (-batCurrent);
 }
 
 //----------------------------------------------------------------------------
@@ -950,7 +954,7 @@ void bq769x0::updateTemperatures2()
     else{
       FAULT_FLAG = false;
       TEMP_FAULT = false;
-      writeRegister(SYS_CTRL2, B00000011);  // closes fets
+      writeRegister(SYS_CTRL2, B01000011);  // closes fets
       // writeRegister(SYS_STAT, 0xFF);
       
     }

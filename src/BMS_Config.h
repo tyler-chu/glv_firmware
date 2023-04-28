@@ -94,9 +94,9 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-350, 550, 0, 550);
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
-    BMS.setShortCircuitProtection(7000, 200);
+    BMS.setShortCircuitProtection(2500, 200);
 
-    BMS.setOvercurrentChargeProtection(7000, 200);
+    BMS.setOvercurrentChargeProtection(2500, 200);
     // BMS.setOvercurrentDischargeProtection(8000, 320);
 
     BMS.setCellUndervoltageProtection(2800, 2);
@@ -159,6 +159,19 @@ void clear_sys_stat(){
 
 }
 
+void configure() {
+    BMS.writeRegister(SYS_CTRL1, B00011000);  // switch external thermistor (TEMP_SEL) and ADC on (ADC_EN)
+    BMS.writeRegister(SYS_CTRL2, B01000000);  // switch CC_EN on
+    regSYS_STAT_t system_status3;
+    system_status3.regByte = BMS.readRegister(SYS_CTRL1);
+    Serial.print("SYS_CTRL1: ");
+    Serial.println(system_status3.regByte);
+    regSYS_STAT_t system_status4;
+    system_status4.regByte = BMS.readRegister(SYS_CTRL2);
+    Serial.print("SYS_CTRL2: ");
+    Serial.println(system_status4.regByte);
+}
+
 /**
  * @brief i2c_rw_test(): read/write to SYS_CTRL1 register
  * - read 24 from SYS_CTRL1
@@ -217,7 +230,11 @@ void get_bms_values(){
     BMS.updateTemperatures2();
     temp_ts2 = BMS.getTemperatureDegC(TS2_CHANNEL);
 
-    BMS.updateCurrent(true);
+    //manually switch on CC_EN
+    // BMS.writeRegister(SYS_CTRL2, B01000000);  // switch CC_EN on
+
+    // BMS.updateCurrent(true);
+    BMS.updateCurrent();
     BMS.updateVoltages();
 
     float divider = 1000.00f;
@@ -256,6 +273,12 @@ void get_bms_values(){
 
     Serial.print("Bat %:    ");
     Serial.println(bat_percentage);
+
+    //SYS_CTRL2
+    regSYS_STAT_t system_status2;
+    system_status2.regByte = BMS.readRegister(SYS_CTRL2);
+    Serial.print("SYS_CTRL2: ");
+    Serial.println(system_status2.regByte);
 
     Serial.println("-----------------------------");
 

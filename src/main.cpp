@@ -25,9 +25,10 @@ void setup()
   bms_setup();
   clear_sys_stat();
   spi_setup();
-  // check_logs();
+  check_logs();
   // lcd_setup();
   // lcd_display_ui();
+  // configure();
 }
 
 void loop()
