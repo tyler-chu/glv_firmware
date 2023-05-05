@@ -25,8 +25,8 @@ void setup()
   clear_sys_stat();
   spi_setup();
   // check_logs();
-  // lcd_setup();
-  // lcd_display_ui();
+  lcd_setup();
+  lcd_display_ui();
   // configure();
 }
 
