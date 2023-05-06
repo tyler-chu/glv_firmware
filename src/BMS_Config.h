@@ -95,11 +95,11 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-350, 550, 0, 550);
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
-    // BMS.setShortCircuitProtection(18000, 200);
-    BMS.setShortCircuitProtection(3000, 200);
+    BMS.setShortCircuitProtection(18000, 200);
+    // BMS.setShortCircuitProtection(3000, 200);
 
-    BMS.setOvercurrentChargeProtection(2500, 200);
-    // BMS.setOvercurrentDischargeProtection(8000, 320);
+    BMS.setOvercurrentChargeProtection(18000, 200);
+    BMS.setOvercurrentDischargeProtection(18000, 320);
 
     BMS.setCellUndervoltageProtection(2800, 2);
     BMS.setCellOvervoltageProtection(4150, 2);
@@ -335,8 +335,8 @@ void get_bms_values(){
     //     BMS.UV_FLAG = true;
     //     // throw UV fault flag
 
-    if (bat_percentage > 100)
-        BMS.OV_FLAG= true;
+    // if (bat_percentage > 100)
+    //     BMS.OV_FLAG= true;
         // throw OV fault flag
     if (bat_percentage < 0)
         BMS.UV_FLAG = true;

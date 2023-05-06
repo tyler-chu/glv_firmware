@@ -326,6 +326,10 @@ float bq769x0::get_percentage()
 {
   float updated_voltage = batVoltage / 1000.00f;
   float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  // float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  // updated_voltage - 16.8
+  //  - lower bound: 2.8 * 6
+  //  - upper bound: 4.15 * 6 
   return bat_percentage;
 }
 
