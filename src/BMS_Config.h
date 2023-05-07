@@ -328,19 +328,19 @@ void get_bms_values(){
 
     // OV/UV Check
 
-    // if (bat_percentage > 100)
-    //     BMS.OV_FLAG= true;
-    //     // throw OV fault flag
-    // if (bat_percentage < 0)
-    //     BMS.UV_FLAG = true;
-    //     // throw UV fault flag
-
-    // if (bat_percentage > 100)
-    //     BMS.OV_FLAG= true;
+    if (bat_percentage > 100)
+        BMS.OV_FLAG= true;
         // throw OV fault flag
     if (bat_percentage < 0)
         BMS.UV_FLAG = true;
         // throw UV fault flag
+
+    // if (bat_percentage > 100)
+    //     BMS.OV_FLAG= true;
+        // throw OV fault flag
+    // if (bat_percentage < 0)
+    //     BMS.UV_FLAG = true;
+    //     // throw UV fault flag
 
     // BMS.checkStatus();
 
