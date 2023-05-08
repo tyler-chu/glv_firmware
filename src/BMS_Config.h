@@ -95,7 +95,11 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-350, 550, 0, 550);
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
+
+    // comment this out for SCD test
     BMS.setShortCircuitProtection(18000, 200);
+
+    // short circuit detection test
     // BMS.setShortCircuitProtection(3000, 200);
 
     BMS.setOvercurrentChargeProtection(18000, 200);
