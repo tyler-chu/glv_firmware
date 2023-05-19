@@ -98,18 +98,14 @@ void bms_set_protection(){
 
     // comment this out for SCD test
     BMS.setShortCircuitProtection(18000, 200);
+    BMS.setOvercurrentChargeProtection(18000, 200);
+    BMS.setOvercurrentDischargeProtection(18000, 320);
 
     // short circuit detection test
     // BMS.setShortCircuitProtection(3000, 200);
 
-    BMS.setOvercurrentChargeProtection(18000, 200);
-    BMS.setOvercurrentDischargeProtection(18000, 320);
-
     BMS.setCellUndervoltageProtection(2800, 2);
     BMS.setCellOvervoltageProtection(4150, 2);
-    // BMS.setCellUndervoltageProtection(2700, 2);
-    // BMS.setCellOvervoltageProtection(4000, 2);
-    // BMS.setCellOvervoltageProtection(0, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);

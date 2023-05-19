@@ -15,7 +15,7 @@
 void setup()
 {
   Serial.begin(115200);
-  delay(3000);
+  // delay(3000);
   i2c_setup();
   // i2c_scanner();
   led_setup();
@@ -24,9 +24,9 @@ void setup()
   bms_setup();
   clear_sys_stat();
   spi_setup();
-  // check_logs();
-  lcd_setup();
-  lcd_display_ui();
+  check_logs();
+  // lcd_setup();
+  // lcd_display_ui();
   // configure();
 }
 
