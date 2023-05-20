@@ -95,17 +95,17 @@ void bms_set_protection(){
     BMS.setTemperatureLimits(-350, 550, 0, 550);
     // BMS.setTemperatureLimits(-35, 80, 0, 80);
     BMS.setShuntResistorValue(5);
-    // BMS.setShortCircuitProtection(18000, 200);
-    BMS.setShortCircuitProtection(14000, 200);
 
-    BMS.setOvercurrentChargeProtection(8000, 200);
-    // BMS.setOvercurrentDischargeProtection(8000, 320);
+    // comment this out for SCD test
+    BMS.setShortCircuitProtection(18000, 200);
+    BMS.setOvercurrentChargeProtection(18000, 200);
+    BMS.setOvercurrentDischargeProtection(18000, 320);
+
+    // short circuit detection test
+    // BMS.setShortCircuitProtection(3000, 200);
 
     BMS.setCellUndervoltageProtection(2800, 2);
     BMS.setCellOvervoltageProtection(4150, 2);
-    // BMS.setCellUndervoltageProtection(2700, 2);
-    // BMS.setCellOvervoltageProtection(4000, 2);
-    // BMS.setCellOvervoltageProtection(0, 2);
 
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
@@ -328,19 +328,19 @@ void get_bms_values(){
 
     // OV/UV Check
 
-    // if (bat_percentage > 100)
-    //     BMS.OV_FLAG= true;
-    //     // throw OV fault flag
-    // if (bat_percentage < 0)
-    //     BMS.UV_FLAG = true;
-    //     // throw UV fault flag
-
     if (bat_percentage > 100)
         BMS.OV_FLAG= true;
         // throw OV fault flag
     if (bat_percentage < 0)
         BMS.UV_FLAG = true;
         // throw UV fault flag
+
+    // if (bat_percentage > 100)
+    //     BMS.OV_FLAG= true;
+        // throw OV fault flag
+    // if (bat_percentage < 0)
+    //     BMS.UV_FLAG = true;
+    //     // throw UV fault flag
 
     // BMS.checkStatus();
 

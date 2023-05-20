@@ -326,6 +326,10 @@ float bq769x0::get_percentage()
 {
   float updated_voltage = batVoltage / 1000.00f;
   float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  // float bat_percentage = ((updated_voltage - 16.8) / 8.1) * 100;
+  // updated_voltage - 16.8
+  //  - lower bound: 2.8 * 6
+  //  - upper bound: 4.15 * 6 
   return bat_percentage;
 }
 
@@ -409,7 +413,7 @@ int bq769x0::checkStatus()
         if (OV_FLAG){
           float bat_percentage = get_percentage();
           // get updated battery percentage
-          if (bat_percentage > 100){
+          if (bat_percentage < 100){
             writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
             OV_FLAG = false;
             fet_closer();
@@ -419,7 +423,7 @@ int bq769x0::checkStatus()
         if (UV_FLAG){
           float bat_percentage = get_percentage();
           // get updated battery percentage
-          if (bat_percentage < 0){
+          if (bat_percentage > 0){
             writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
             UV_FLAG = false;
             fet_closer();
@@ -442,38 +446,40 @@ int bq769x0::checkStatus()
 
         // }
 
-        // if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
-        //   updateVoltages();
-        //   if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
-        //     Serial.println("UV Error detected");
-        //     LOG_PRINTLN(F("- Clearing UV Error ..."));
-        //     writeRegister(SYS_STAT, B00001000);
-        //   }
-        // }
-
-        // if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
-        //   updateVoltages();
-        //   if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
-
-        //     // LOG_PRINTLN(F("- Clearing OV Error ..."));
-        //     writeRegister(SYS_STAT, B00000100); // clears fault
-        //     // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
-        //   }
-        // }
-
-        // if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
-        //   // if (secSinceErrorCounter % 60 == 0) {
-            
-        //     // LOG_PRINTLN(F("- Clearing SCD Error ..."));
-        //     writeRegister(SYS_STAT, B00000010);
-        //   }
+        if (sys_stat.regByte == 8 || sys_stat.regByte == 136) { // UV error
+          // updateVoltages();
+          // if (cellVoltages[idCellMinVoltage] > minCellVoltage) {
+          //   Serial.println("UV Error detected");
+          //   LOG_PRINTLN(F("- Clearing UV Error ..."));
+            fet_closer();
+            writeRegister(SYS_STAT, B00001000);
+        }
         
-        // not mandatory
-        // if (sys_stat.regByte == 1 || sys_stat.regByte == 129) { // OCD
-        //     // LOG_PRINTLN(F("Clearing OCD error"));
-        //     writeRegister(SYS_STAT, B00000001);
-          
-        // }
+
+        if (sys_stat.regByte == 4 || sys_stat.regByte == 132) { // OV error
+          // updateVoltages();
+          // if (cellVoltages[idCellMaxVoltage] < maxCellVoltage) {
+            // LOG_PRINTLN(F("- Clearing OV Error ..."));
+            fet_closer();
+            writeRegister(SYS_STAT, B00000100); // clears fault
+            // writeRegister(SYS_CTRL2, sys_ctrl2 | B00000011);  // closes fets
+        }
+        
+
+        if (sys_stat.regByte == 2 || sys_stat.regByte == 130) { // SCD
+          // if (secSinceErrorCounter % 60 == 0) {
+            
+            // LOG_PRINTLN(F("- Clearing SCD Error ..."));
+            fet_closer();
+            writeRegister(SYS_STAT, B00000010);
+          }
+        
+
+        if (sys_stat.regByte == 1 || sys_stat.regByte == 129) { // OCD
+            // LOG_PRINTLN(F("Clearing OCD error"));
+            fet_closer();
+            writeRegister(SYS_STAT, B00000001);
+        }
 
         // temp error 
         if (TEMP_FAULT == true){
@@ -919,7 +925,8 @@ void bq769x0::updateTemperatures()
     tmp = 1.0/(1.0/(273.15+25) + 1.0/thermistorBetaValue*log(rts/10000.0)); // K
     
     // update channel 1 temp (TS1)
-    temperatures[0] = (tmp - 273.15) * 10.0;
+    // temperatures[0] = (tmp - 273.15) * 10.0;
+    temperatures[1] = (tmp - 273.15) * 10.0;
   }
 
 }
@@ -954,7 +961,8 @@ void bq769x0::updateTemperatures2()
     tmp = 1.0/(1.0/(273.15+25) + 1.0/thermistorBetaValue*log(rts/10000.0)); // K
     
     // update channel 2 temp (TS2)
-    temperatures[1] = (tmp - 273.15) * 10.0;
+    // temperatures[1] = (tmp - 273.15) * 10.0;
+    temperatures[0] = (tmp - 273.15) * 10.0;
 
     // Serial.print("updateTemperature2(): ");
     // Serial.println(temperatures[1]/10);
@@ -1077,10 +1085,10 @@ void bq769x0::updateCurrent(bool ignoreCCReadyFlag)
   //   SCD_FLAG = false;
   // }
 
-  Serial.print("FAULT_FLAG: ");
-  Serial.println(FAULT_FLAG);
-  Serial.print("SCD_FLAG: ");
-  Serial.println(SCD_FLAG);
+  // Serial.print("FAULT_FLAG: ");
+  // Serial.println(FAULT_FLAG);
+  // Serial.print("SCD_FLAG: ");
+  // Serial.println(SCD_FLAG);
   
 }
 
