@@ -19,13 +19,6 @@ bq769x0 BMS;                                        // BMS Object
 float temp, temp_ts1, temp_ts2, current, voltage, bat_percentage;     // used for BMS
 hw_timer_t *status_cfg = NULL;
 
-// status_ISR(): 
-// void IRAM_ATTR status_ISR(){
-//     // continuously loop in checkStatus() if there is a fault
-//     if (BMS.FAULT_FLAG == false)
-//         BMS.checkStatus();
-// }
-
 // i2c_setup: sets up communication between BM IC (PCB) & ESP-32
 void i2c_setup(){
     Wire.begin(I2C_SDA, I2C_SCL);
@@ -110,25 +103,12 @@ void bms_set_protection(){
     BMS.setBalancingThresholds(0, 3600, 20);    // later on change to 10 mV
     BMS.setIdleCurrentThreshold(100);
 
-    // TODO:
-    // max voltage: 4V / per cell = 24 V (max pack voltage)
-    // under voltage: 2.7 * 6 = 16.2 V (min pack voltage)
-    // short circuit (20 A)
-    // temp (TS1: 60C, come up w/ ambient temp)
-
-
 }
 
 // bms_setup: configures BMS for data reading/protection
 void bms_setup(){
     Serial.println("bms_setup(): Running...");
     BMS.begin(ALERT_PIN, 3);   // (alert, boot)
-
-    // config timer for interrupt (5 sec timer)
-    // status_cfg = timerBegin(0, 40, true);
-    // timerAttachInterrupt(status_cfg, &status_ISR, true);
-    // timerAlarmWrite(status_cfg, 5000000, true);
-    // timerAlarmEnable(status_cfg);
     
     bms_set_protection();
     BMS.enableAutoBalancing();
@@ -161,91 +141,13 @@ void clear_sys_stat(){
 
 }
 
-void configure() {
-    BMS.writeRegister(SYS_CTRL1, B00011000);  // switch external thermistor (TEMP_SEL) and ADC on (ADC_EN)
-    BMS.writeRegister(SYS_CTRL2, B01000000);  // switch CC_EN on
-    regSYS_STAT_t system_status3;
-    system_status3.regByte = BMS.readRegister(SYS_CTRL1);
-    Serial.print("SYS_CTRL1: ");
-    Serial.println(system_status3.regByte);
-    regSYS_STAT_t system_status4;
-    system_status4.regByte = BMS.readRegister(SYS_CTRL2);
-    Serial.print("SYS_CTRL2: ");
-    Serial.println(system_status4.regByte);
-}
-
 void checkSCD() {
     if (BMS.SCD_FLAG == true) {
         Serial.println("- BMS.shutdown(): Running...");
         BMS.shutdown();
         Serial.println("- ESP-32: Entering Deep-Sleep Mode");
-        // sleep esp-32 
         esp_deep_sleep_start();
-
-        // BMS.writeRegister(SYS_CTRL2, B00000000); // open FETs
-        // delay(5000);
-        // BMS.writeRegister(SYS_CTRL2, B01000011);
-        // delay(3000);
-        // // Serial.println("In loop...");
-
-        // // Serial.print("Bat Current: ");
-        // // Serial.println(-BMS.batCurrent / 1000.00f);
-
-        // // Serial.print("scd_threshold: ");
-        // // Serial.println(-BMS.scd_threshold / 1000.00f);
-
-        // BMS.updateCurrent();
-
-        // if ( (-BMS.batCurrent >= 0.00) && (-BMS.batCurrent < BMS.scd_threshold) ){
-        //     Serial.println("FIXED!!!");
-        //     Serial.print("Bat Current: ");
-        //     Serial.println(-BMS.batCurrent);
-
-        //     Serial.print("scd_threshold: ");
-        //     Serial.println(BMS.scd_threshold / 1000.00f);
-
-        //     delay(5000);
-        //     // writeRegister(SYS_STAT, B00000011);
-        //     BMS.SCD_FLAG = false;
-        //     BMS.FAULT_FLAG = false;
-        //     BMS.fet_closer();
-        
     }
-}
-
-/**
- * @brief i2c_rw_test(): read/write to SYS_CTRL1 register
- * - read 24 from SYS_CTRL1
- * - write 0 to SYS_CTRL1 & read 0
- * - reset SYS_CTRL1 back to 24
- */
-void i2c_rw_test(){
-    Serial.println("i2c_rw_test(): Running...");
-
-    // read (0x18) 24 from SYS_CTRL1
-    Serial.print("- Read [Dec]: (");
-    Serial.print(BMS.readRegister(SYS_CTRL1));
-    Serial.println(")\t <-- SYS_CTRL1 Register");
-
-    // write (0x00) 0 to SYS_CTRL1
-    Serial.println("- Write [Hex]: (0x00)\t --> SYS_CTRL1 Register");
-    BMS.writeRegister(SYS_CTRL1, 0x00);
-
-    // read (0x00) 0 from SYS_CTRL1
-    Serial.print("- Read [Dec]: (");
-    Serial.print(BMS.readRegister(SYS_CTRL1));
-    Serial.println(")\t <-- SYS_CTRL1 Register");
-
-    // write (0x18) 24 to SYS_CTRL1
-    Serial.println("- Write [Hex]: (0x18)\t --> SYS_CTRl1 Register");
-    BMS.writeRegister(SYS_CTRL1, 24);
-
-    // read (0x18) 24 from SYS_CTRl1
-    Serial.print("- Read [Dec]: (");
-    Serial.print(BMS.readRegister(SYS_CTRL1));
-    Serial.println(")\t <-- SYS_CTRL1 Register");
-
-    Serial.println("-----------------------");
 }
 
 // get_bms_values(): get temp, current, voltage readings
@@ -290,16 +192,9 @@ void get_bms_values(){
     // Serial.print("Temp TS2 [Int/Die]: \t");
     Serial.print("Temp TS2: ");
     Serial.println(temp_ts2);
-
-    // Serial.print("I_o: ");
-    // // Serial.println(current);
-    // Serial.println("0");
     
     Serial.print("I_o: \t  ");
     Serial.println(current);
-
-    // Serial.println("I_o: 2.53");
-    // Serial.println(current);
 
     // Serial.print("V_bat [Pack Voltage]: \t");
     Serial.print("V_bat:    ");
@@ -315,7 +210,7 @@ void get_bms_values(){
     Serial.print("Bat %:    ");
     Serial.println(bat_percentage);
 
-    //SYS_CTRL2
+    // SYS_CTRL2
     regSYS_STAT_t system_status2;
     system_status2.regByte = BMS.readRegister(SYS_CTRL2);
     Serial.print("SYS_CTRL2: ");
@@ -334,22 +229,6 @@ void get_bms_values(){
     if (bat_percentage < 0)
         BMS.UV_FLAG = true;
         // throw UV fault flag
-
-    // if (bat_percentage > 100)
-    //     BMS.OV_FLAG= true;
-        // throw OV fault flag
-    // if (bat_percentage < 0)
-    //     BMS.UV_FLAG = true;
-    //     // throw UV fault flag
-
-    // BMS.checkStatus();
-
-}
-
-// bms_loop(): recieves bms values, displays data, checks status of BM IC
-//             loops through logging processes
-void bms_loop(){
-    Serial.println();
 }
 
 #endif

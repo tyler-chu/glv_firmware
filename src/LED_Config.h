@@ -179,8 +179,6 @@ void led_logging(){
 
     // fault detection
     fault_detection(fault_reg.regByte);
-    // if (BMS.FAULT_FLAG)
-    //     return;
 
     // momentary switch (HIGH) --> logging state
     if (led_state == HIGH && disp_counter == 1){

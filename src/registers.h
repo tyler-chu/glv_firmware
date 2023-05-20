@@ -16,9 +16,6 @@
 
 #include <Arduino.h>
 
-// global interrupt flag
-// bool FAULT_FLAG = false;
-
 // register map
 #define SYS_STAT        0x00
 #define CELLBAL1        0x01

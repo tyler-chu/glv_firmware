@@ -15,7 +15,6 @@
 void setup()
 {
   Serial.begin(115200);
-  // delay(3000);
   i2c_setup();
   // i2c_scanner();
   led_setup();
@@ -27,16 +26,12 @@ void setup()
   check_logs();
   // lcd_setup();
   // lcd_display_ui();
-  // configure();
 }
 
 void loop()
 {
-  // TODO: fix checkStatus()
   get_bms_values();
   BMS.checkStatus();
   led_logging();
   checkSCD();
-  // lcd_display_motorvator();
-  // bms_setup();
 }

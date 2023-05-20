@@ -76,10 +76,7 @@ void readFile(fs::FS &fs, const char * path){
 
   Serial.print("Read from file: \n");
   delay(1000);
-  // while(file.available()){
-  //   // Serial.write(file.read());
-  //   file_exists = true;
-  // }
+
   file_exists = true;
   file.close();
 }
@@ -216,21 +213,8 @@ void spi_write(float temp_ts1, float temp_ts2, float current, float voltage, flo
     sprintf(name_buffer, "/log%d.csv", file_counter);
     writeFile(SD, name_buffer, "Time(min:sec), TS1, TS2, I_o, V_bat, Bat%, Fault, [y/n]\n");
     counter += 1;
-
-    // // if fault causes logging
-    // if (BMS.FAULT_FLAG){
-    //   sprintf(fault_buffer, "Fault, Detected, %s\n", fault_name);
-    //   appendFile(SD, name_buffer, fault_buffer);
-    //   return;
-    // }
   }
 
-  // // fault occurs during logging (1st iteration)
-  // if (BMS.FAULT_FLAG && BMS.fault_counter == 1){
-  //   sprintf(fault_buffer, "Fault, Detected, %s\n", fault_name);
-  //   appendFile(SD, name_buffer, fault_buffer);
-  // }
-  
   // post 1st iteration, append to existing .csv file
   appendFile(SD, name_buffer, buffer);
   Serial.println(buffer);
